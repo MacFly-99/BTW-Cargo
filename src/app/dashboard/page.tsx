@@ -1,13 +1,62 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { Ship, Container, Anchor, MapPin } from 'lucide-react'
-import { AdminRealtimeStats } from '@/components/AdminRealtimeStats' // <-- IMPORT
+import { cookies } from 'next/headers'
+import { jwtVerify } from 'jose'
+import { redirect } from 'next/navigation'
+import { PendingContainersList } from '@/components/PendingContainersList'
+import { Ship, Container, Anchor, MapPin, ClipboardCheck } from 'lucide-react'
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
+const getJwtSecret = () => new TextEncoder().encode(process.env.JWT_SECRET)
 
 export default async function DashboardPage() {
-  // On fait les requêtes en parallèle pour aller plus vite
+  // 1. Récupération et vérification de la session
+  const cookieStore = await cookies()
+  const sessionCookie = cookieStore.get('session')
+  
+  if (!sessionCookie) redirect('/login')
+
+  let session: any
+  try {
+    const { payload } = await jwtVerify(sessionCookie.value, getJwtSecret())
+    session = payload
+  } catch (error) {
+    redirect('/login')
+  }
+
+  // ==========================================
+  // VUE UTILISATEUR (MÉTIER / OPÉRATEUR)
+  // ==========================================
+  if (session.role !== 'ADMIN') {
+    // On récupère les 10 derniers conteneurs en attente de validation
+    const pendingContainers = await prisma.container.findMany({
+      where: { status: 'PENDING' },
+      take: 10,
+      orderBy: { createdAt: 'desc' }
+    })
+
+    return (
+      <div className="p-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold flex items-center gap-3">
+            <ClipboardCheck className="text-blue-500" size={32} />
+            Espace Opérateur
+          </h1>
+          <p className="text-slate-400 mt-2">Validez les chargements avant embarquement.</p>
+        </div>
+
+        <div className="max-w-4xl">
+          <h2 className="text-xl font-semibold mb-4 text-white">Conteneurs en attente de validation</h2>
+          <PendingContainersList initialContainers={pendingContainers} />
+        </div>
+      </div>
+    )
+  }
+
+  // ==========================================
+  // VUE ADMIN (STATISTIQUES GLOBALES)
+  // ==========================================
   const [
     totalContainers,
     containersOnShips,
@@ -24,16 +73,12 @@ export default async function DashboardPage() {
 
   const containersInStock = totalContainers - containersOnShips
 
-   return (
+  return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold mb-2">Gestion Globale (Admin)</h1>
-      <p className="text-slate-400 mb-8">Supervision de l'application en temps réel.</p>
-      
-      {/* On appelle notre composant d'affichage en temps réel */}
-      <AdminRealtimeStats />
-    </div>
-   )
-
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">Tableau de bord</h1>
+        <p className="text-slate-400 mt-2">Vue d'ensemble de votre flotte et de vos stocks.</p>
+      </div>
 
       {/* Grid de Statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -64,7 +109,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Carte : Navires Actifs */}
+        {/* Carte : Navires en Mer */}
         <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
           <div className="flex justify-between items-start">
             <div>
@@ -103,4 +148,6 @@ export default async function DashboardPage() {
           Vous avez actuellement <span className="text-white font-bold">{containersOnShips.toLocaleString()}</span> conteneurs chargés sur des navires.
         </p>
       </div>
+    </div>
+  )
 }
