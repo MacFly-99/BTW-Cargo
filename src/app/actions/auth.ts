@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { SignJWT } from 'jose'
+import { jwtVerify } from 'jose'
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
@@ -59,4 +60,20 @@ export async function logout() {
   const cookieStore = await cookies()
   cookieStore.delete('session')
   redirect('/login')
+}
+
+export async function verifySession() {
+  const cookieStore = await cookies()
+  const sessionCookie = cookieStore.get('session')
+
+  if (!sessionCookie) return { valid: false }
+
+  try {
+    await jwtVerify(sessionCookie.value, getJwtSecret())
+    return { valid: true }
+  } catch (error) {
+    // Si le token est invalide, on le supprime
+    cookieStore.delete('session')
+    return { valid: false }
+  }
 }

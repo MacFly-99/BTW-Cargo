@@ -88,13 +88,21 @@ async function main() {
   await prisma.ship.deleteMany()
   await prisma.user.deleteMany()
 
-  // --- CRÉATION DE L'ADMIN ---
-  console.log('👤 Création de l\'utilisateur Admin...')
-  const hashedPassword = await bcrypt.hash('admin123', 10)
+    // --- CRÉATION DE L'ADMIN ---
+  console.log('👤 Création de l\'utilisateur Admin sécurisé...')
+  
+  const adminEmail = process.env.ADMIN_EMAIL
+  const adminPassword = process.env.ADMIN_PASSWORD
+
+  if (!adminEmail || !adminPassword) {
+    throw new Error("Les variables ADMIN_EMAIL et ADMIN_PASSWORD doivent être définies dans le .env")
+  }
+
+  const hashedPassword = await bcrypt.hash(adminPassword, 10)
   
   await prisma.user.create({
     data: {
-      email: 'admin@btwcargo.com',
+      email: adminEmail,
       password: hashedPassword,
       name: 'Capitaine Admin',
       role: 'ADMIN'
