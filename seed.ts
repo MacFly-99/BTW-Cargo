@@ -98,14 +98,35 @@ async function main() {
     throw new Error("Les variables ADMIN_EMAIL et ADMIN_PASSWORD doivent être définies dans le .env")
   }
 
-  const hashedPassword = await bcrypt.hash(adminPassword, 10)
+  const hashedAdminPassword = await bcrypt.hash(adminPassword, 10)
   
   await prisma.user.create({
     data: {
       email: adminEmail,
-      password: hashedPassword,
+      password: hashedAdminPassword,
       name: 'Capitaine Admin',
       role: 'ADMIN'
+    }
+  })
+
+  // --- CRÉATION DE L'OPÉRATEUR ---
+  console.log('👤 Création de l\'utilisateur Opérateur...')
+  
+  const operatorEmail = process.env.OPERATOR_EMAIL
+  const operatorPassword = process.env.OPERATOR_PASSWORD
+
+  if (!operatorEmail || !operatorPassword) {
+    throw new Error("Les variables OPERATOR_EMAIL et OPERATOR_PASSWORD doivent être définies dans le .env")
+  }
+
+  const hashedOperatorPassword = await bcrypt.hash(operatorPassword, 10)
+  
+  await prisma.user.create({
+    data: {
+      email: operatorEmail,
+      password: hashedOperatorPassword,
+      name: 'Agent de Quai',
+      role: 'USER'
     }
   })
 

@@ -6,7 +6,7 @@ datasource db {
   provider = "postgresql"
 }
 
-// --- NOS MODÈLES ---
+// --- MES MODÈLES ---
 
 enum ShipType {
   SMALL
@@ -34,6 +34,12 @@ enum ContainerColor {
   VERT
   ORANGE
   JAUNE
+}
+
+enum ContainerStatus {
+  PENDING    // En attente de validation
+  VALIDATED  // Validé pour l'envoi
+  SHIPPED    // Déjà parti (sur le navire)
 }
 
 enum Port {
@@ -68,6 +74,7 @@ model Container {
   type        ContainerType
   color       ContainerColor
   destination Port
+  status      ContainerStatus @default(PENDING)
   
   // Adresse de stockage (Zone, Rangée, Slot)
   zone        String   // Ex: "A"
