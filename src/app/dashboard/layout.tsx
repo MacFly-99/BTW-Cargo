@@ -44,7 +44,7 @@ export default async function DashboardLayout({
             <LayoutDashboard size={20} />
             Tableau de bord
           </Link>
-          <Link href="/ships" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-slate-300 hover:text-white">
+          <Link href="/dashboard/ships" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-slate-300 hover:text-white">
             <Ship size={20} />
             Navires
           </Link>
