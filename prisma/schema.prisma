@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- NOS MODÈLES ---
+
+enum ShipType {
+  SMALL
+  MEDIUM
+  LARGE
+  ULTRA_LARGE
+}
+
+enum ShipStatus {
+  DOCKED
+  IN_TRANSIT
+  MAINTENANCE
+}
+
+enum ContainerType {
+  DRY
+  HIGH_CUBE
+  OPEN_TOP
+}
+
+enum ContainerColor {
+  BLEU_MARINE
+  GRIS_METALLIQUE
+  BLANC
+  VERT
+  ORANGE
+  JAUNE
+}
+
+enum Port {
+  SHANGHAI
+  SINGAPOUR
+  NINGBO_ZHOUSHAN
+  SHENZHEN
+  GUANGZHOU
+  BUSAN
+  ROTTERDAM
+  HONG_KONG
+  ANVERS
+  LOS_ANGELES
+}
+
+model Ship {
+  id        String   @id @default(uuid())
+  name      String
+  type      ShipType
+  status    ShipStatus @default(DOCKED)
+  capacity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  containers Container[] // Relation : un navire a plusieurs conteneurs
+}
+
+model Container {
+  id          String   @id @default(uuid())
+  code        String   @unique // Ex: MSKU1234567
+  type        ContainerType
+  color       ContainerColor
+  destination Port
+  
+  // Adresse de stockage (Zone, Rangée, Slot)
+  zone        String   // Ex: "A"
+  row         Int      // Ex: 1
+  slot        Int      // Ex: 1 (de 1 à 60)
+
+  // Relation avec le navire (optionnel : un conteneur peut être en stock)
+  shipId      String?
+  ship        Ship?    @relation(fields: [shipId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
