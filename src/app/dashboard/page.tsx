@@ -62,13 +62,15 @@ export default async function DashboardPage() {
     containersOnShips,
     totalShips,
     shipsInTransit,
-    shipsDocked
+    shipsDocked,
+    shipsInMaintenance 
   ] = await Promise.all([
     prisma.container.count(),
     prisma.container.count({ where: { shipId: { not: null } } }),
     prisma.ship.count(),
     prisma.ship.count({ where: { status: 'IN_TRANSIT' } }),
     prisma.ship.count({ where: { status: 'DOCKED' } }),
+    prisma.ship.count({ where: { status: 'MAINTENANCE' } }),
   ])
 
   const containersInStock = totalContainers - containersOnShips
@@ -141,8 +143,9 @@ export default async function DashboardPage() {
         <h2 className="text-xl font-bold mb-4">État de la flotte</h2>
         <p className="text-slate-400">
           Sur un total de <span className="text-white font-bold">{totalShips}</span> navires, 
-          <span className="text-emerald-400 font-bold"> {shipsInTransit} </span> sont actuellement en mer et 
-          <span className="text-blue-400 font-bold"> {shipsDocked} </span> sont à quai.
+          <span className="text-emerald-400 font-bold"> {shipsInTransit} </span> sont en mer, 
+          <span className="text-blue-400 font-bold"> {shipsDocked} </span> sont à quai et 
+          <span className="text-amber-400 font-bold"> {shipsInMaintenance} </span> sont en maintenance.
         </p>
         <p className="text-slate-400 mt-2">
           Vous avez actuellement <span className="text-white font-bold">{containersOnShips.toLocaleString()}</span> conteneurs chargés sur des navires.
