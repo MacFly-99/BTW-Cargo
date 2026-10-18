@@ -1,11 +1,10 @@
 import { PrismaClient, ShipType, ShipStatus, ContainerType, ContainerColor, Port } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
-import 'dotenv/config' // Pour charger la variable DATABASE_URL
+import bcrypt from 'bcryptjs'
+import 'dotenv/config'
 
-// On crée l'adaptateur avec l'URL de connexion
+// Configuration de Prisma avec l'adaptateur
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
-
-// On passe l'adaptateur au client Prisma
 const prisma = new PrismaClient({ adapter })
 
 // --- 1. DÉFINITION DES PORTS ---
@@ -40,14 +39,13 @@ const shipsData = [
   { name: 'Le Béhémoth', type: ShipType.ULTRA_LARGE, capacity: 20000, status: ShipStatus.DOCKED, route: routes[1] },
 ]
 
-// --- 4. DÉFINITION DES ZONES ET DE LEUR CAPACITÉ ---
-// Chaque rangée a 60 slots (10x6). On définit les rangées par terminal.
+// --- 4. DÉFINITION DES ZONES ---
 const ZONES = [
-  { name: 'Terminal Nord', startRow: 1, endRow: 500 },       // 30 000 places
-  { name: 'Terminal Sud', startRow: 501, endRow: 1000 },     // 30 000 places
-  { name: 'Terminal Est', startRow: 1001, endRow: 1400 },    // 24 000 places
-  { name: 'Terminal Ouest', startRow: 1401, endRow: 1700 },  // 18 000 places
-  { name: 'Zone de Transit', startRow: 1701, endRow: 2000 }, // 18 000 places
+  { name: 'Terminal Nord', startRow: 1, endRow: 500 },
+  { name: 'Terminal Sud', startRow: 501, endRow: 1000 },
+  { name: 'Terminal Est', startRow: 1001, endRow: 1400 },
+  { name: 'Terminal Ouest', startRow: 1401, endRow: 1700 },
+  { name: 'Zone de Transit', startRow: 1701, endRow: 2000 },
 ]
 
 // --- 5. LOGIQUE DE COULEUR SELON LE TYPE ---
@@ -82,13 +80,29 @@ function generateContainerCode() {
 }
 
 async function main() {
-  console.log('🚀 Début du remplissage de la base de données...')
+  console.log('🚀 Début du remplissage de la base de données (Version Ultra-Réaliste)...')
 
+  // --- NETTOYAGE ---
+  console.log('🧹 Nettoyage de la base de données...')
   await prisma.container.deleteMany()
   await prisma.ship.deleteMany()
+  await prisma.user.deleteMany()
 
-  console.log('⛴️ Création des 12 navires...')
+  // --- CRÉATION DE L'ADMIN ---
+  console.log('👤 Création de l\'utilisateur Admin...')
+  const hashedPassword = await bcrypt.hash('admin123', 10)
   
+  await prisma.user.create({
+    data: {
+      email: 'admin@btwcargo.com',
+      password: hashedPassword,
+      name: 'Capitaine Admin',
+      role: 'ADMIN'
+    }
+  })
+
+  // --- CRÉATION DES NAVIRES ---
+  console.log('⛴️ Création des 12 navires...')
   const shipsWithFillTracker: any[] = []
 
   for (const ship of shipsData) {
@@ -109,8 +123,8 @@ async function main() {
     })
   }
 
+  // --- CRÉATION DES CONTENEURS ---
   console.log('📦 Génération de 100 000 conteneurs...')
-  
   const totalContainers = 100000
   const batchSize = 5000 
 
@@ -120,19 +134,15 @@ async function main() {
     for (let j = 0; j < batchSize; j++) {
       const globalIndex = i + j
       
-      // --- A. ADRESSAGE PHYSIQUE ---
-      // On calcule la rangée globale (1 à 2000)
+      // Adressage physique
       const globalRow = Math.floor(globalIndex / 60) + 1 
       const slot = (globalIndex % 60) + 1
       
-      // On trouve la zone correspondante à cette rangée globale
       const zoneObj = ZONES.find(z => globalRow >= z.startRow && globalRow <= z.endRow)
-      
-      // On calcule la rangée LOCALE à l'intérieur de la zone (ex: Row 1 à 500 pour Terminal Nord)
       const localRow = zoneObj ? globalRow - zoneObj.startRow + 1 : 1
       const zoneName = zoneObj ? zoneObj.name : 'Zone Inconnue'
 
-      // --- B. CHOIX DU NAVIRE ET DE LA DESTINATION ---
+      // Choix du navire et de la destination
       let assignedShip = null
       let containerDestination = ports[Math.floor(Math.random() * ports.length)]
       
@@ -146,7 +156,7 @@ async function main() {
         assignedShip.currentFill += 1
       }
 
-      // --- C. DÉTERMINATION DU TYPE ET DE LA COULEUR ---
+      // Détermination du type et de la couleur
       const containerType = assignedShip 
         ? getTypeForShip(assignedShip.type)
         : (Math.random() < 0.5 ? ContainerType.DRY : ContainerType.HIGH_CUBE)
@@ -158,9 +168,9 @@ async function main() {
         type: containerType,
         color: containerColor,
         destination: containerDestination,
-        zone: zoneName,     // Ex: "Terminal Nord"
-        row: localRow,      // Ex: 1 à 500
-        slot: slot,         // Ex: 1 à 60
+        zone: zoneName,
+        row: localRow,
+        slot: slot,
         shipId: assignedShip ? assignedShip.id : null
       })
     }
