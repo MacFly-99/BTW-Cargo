@@ -6,6 +6,7 @@ import { ArrowLeft, Plus } from 'lucide-react'
 import { RealtimeRefresher } from '@/components/RealtimeRefresher'
 import { cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
+import { CreateShipModal } from '@/components/CreateShipModal'
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
@@ -49,10 +50,7 @@ export default async function ShipsPage({
       {/* Barre d'actions avec le bouton Retour */}
       <div className="mb-6 flex justify-between items-center">
         {isAdmin && (
-          <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-            <Plus size={16} />
-            Nouveau Navire
-          </button>
+          <CreateShipModal />
         )}
       </div>
 
