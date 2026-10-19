@@ -123,3 +123,23 @@ export async function deleteContainer(id: string) {
     return { error: 'Erreur lors de la suppression.' }
   }
 }
+
+// ==========================================
+// 4. MISE À JOUR DESTINATION (Admin uniquement)
+// ==========================================
+export async function updateContainerDestination(id: string, newDestination: string) {
+  if (!(await isAdmin())) {
+    return { error: 'Accès refusé. Seul un administrateur peut modifier la destination.' }
+  }
+
+  try {
+    await prisma.container.update({
+      where: { id },
+      data: { destination: newDestination as any }
+    })
+    revalidatePath('/dashboard/containers')
+    return { success: true }
+  } catch (error) {
+    return { error: 'Erreur lors de la modification.' }
+  }
+}

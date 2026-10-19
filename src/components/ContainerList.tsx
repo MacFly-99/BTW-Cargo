@@ -2,8 +2,8 @@
 
 import { useRouter, usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { Search, Ship, MapPin, ChevronLeft, ChevronRight, Package, Trash2, Pencil } from 'lucide-react'
-import { deleteContainer } from '@/app/actions/containers'
+import { Search, Ship, MapPin, ChevronLeft, ChevronRight, Package, Trash2, Pencil, AlertTriangle, Loader2 } from 'lucide-react'
+import { deleteContainer, updateContainerDestination } from '@/app/actions/containers'
 
 const colorMap: Record<string, string> = {
   BLEU_MARINE: 'bg-blue-900',
@@ -28,12 +28,17 @@ export function ContainerList({
   currentColor,
   destinations,
   colors,
-  isAdmin // <--- NOUVEAU PARAMÈTRE
+  isAdmin
 }: any) {
   const router = useRouter()
   const pathname = usePathname()
+  
   const [searchTerm, setSearchTerm] = useState(currentSearch)
   const [editingId, setEditingId] = useState<string | null>(null)
+  
+  // États pour la modale de suppression
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const updateUrl = (newParams: Record<string, string>) => {
     const params = new URLSearchParams()
@@ -56,16 +61,28 @@ export function ContainerList({
     return () => clearTimeout(timer)
   }, [searchTerm])
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Voulez-vous vraiment supprimer ce conteneur ?')) {
-      const res = await deleteContainer(id)
-      if (res.error) alert(res.error)
+  // Fonction de suppression confirmée
+  const confirmDelete = async () => {
+    if (!deleteId) return
+    setIsDeleting(true)
+    const res = await deleteContainer(deleteId)
+    if (res.error) {
+      alert(res.error) // Si erreur serveur, on prévient
+    } else {
+      setDeleteId(null) // On ferme la modale
     }
+    setIsDeleting(false)
+  }
+
+  const handleUpdateDestination = async (id: string, newDest: string) => {
+    const res = await updateContainerDestination(id, newDest)
+    if (res.error) alert(res.error)
+    else setEditingId(null)
   }
 
   return (
     <div className="space-y-6">
-      {/* Filtres (inchangés) */}
+      {/* --- FILTRES --- */}
       <div className="flex flex-col gap-4 bg-slate-800 p-4 rounded-xl border border-slate-700">
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
@@ -98,9 +115,10 @@ export function ContainerList({
         )}
       </div>
 
-      {/* Tableau */}
+      {/* --- TABLEAU --- */}
       <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
         <table className="w-full text-left text-sm text-slate-300">
+          {/* CORRECTION DE L'ERREUR : On colle les balises sans espaces */}
           <thead className="bg-slate-900/50 text-slate-400 text-xs uppercase font-medium">
             <tr>
               <th className="px-6 py-4">Code</th>
@@ -110,7 +128,7 @@ export function ContainerList({
               <th className="px-6 py-4">Emplacement</th>
               <th className="px-6 py-4">Navire</th>
               <th className="px-6 py-4">Statut</th>
-              {isAdmin && <th className="px-6 py-4 text-right">Actions</th>} {/* UNIQUEMENT ADMIN */}
+              {isAdmin && <th className="px-6 py-4 text-right">Actions</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700/50">
@@ -125,6 +143,30 @@ export function ContainerList({
                 </td>
                 <td className="px-6 py-4">{container.type}</td>
                 
+                <td className="px-6 py-4">
+                  {editingId === container.id ? (
+                    <select 
+                      autoFocus
+                      defaultValue={container.destination}
+                      onChange={(e) => handleUpdateDestination(container.id, e.target.value)}
+                      onBlur={() => setEditingId(null)}
+                      className="bg-slate-900 border border-blue-500 text-white text-xs rounded px-2 py-1"
+                    >
+                      {DESTINATIONS.map(d => <option key={d} value={d}>{d.replace('_', ' ')}</option>)}
+                    </select>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <MapPin size={14} className="text-slate-500" />
+                      {container.destination}
+                      {isAdmin && (
+                        <button onClick={() => setEditingId(container.id)} className="text-slate-500 hover:text-blue-400 transition-colors ml-1 p-1" title="Modifier la destination">
+                          <Pencil size={14} />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </td>
+
                 <td className="px-6 py-4 text-xs font-mono text-slate-400">{container.zone} - R{container.row} S{container.slot}</td>
                 <td className="px-6 py-4">
                   {container.ship ? (
@@ -141,10 +183,9 @@ export function ContainerList({
                   }`}>{container.status}</span>
                 </td>
                 
-                {/* BOUTON SUPPRIMER UNIQUEMENT POUR ADMIN */}
                 {isAdmin && (
                   <td className="px-6 py-4 text-right">
-                    <button onClick={() => handleDelete(container.id)} className="text-slate-500 hover:text-red-400 transition-colors p-1" title="Supprimer">
+                    <button onClick={() => setDeleteId(container.id)} className="text-slate-500 hover:text-red-400 transition-colors p-1" title="Supprimer">
                       <Trash2 size={18} />
                     </button>
                   </td>
@@ -163,7 +204,7 @@ export function ContainerList({
         </table>
       </div>
 
-      {/* Pagination */}
+      {/* --- PAGINATION --- */}
       <div className="flex items-center justify-between bg-slate-800 p-4 rounded-xl border border-slate-700">
         <div className="text-sm text-slate-400">
           Page <span className="text-white font-medium">{currentPage}</span> sur <span className="text-white font-medium">{totalPages || 1}</span>
@@ -174,6 +215,37 @@ export function ContainerList({
           <button onClick={() => updateUrl({ page: (currentPage + 1).toString() })} disabled={currentPage >= totalPages} className="p-2 rounded-lg border border-slate-600 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRight size={20} /></button>
         </div>
       </div>
+
+      {/* --- MODALE DE SUPPRESSION (DOUBLE CHECK) --- */}
+      {deleteId && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md shadow-2xl p-6 text-center">
+            <div className="mx-auto w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+              <AlertTriangle className="text-red-500" size={32} />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Confirmer la suppression</h3>
+            <p className="text-slate-400 mb-6">
+              Êtes-vous sûr de vouloir supprimer ce conteneur ? Cette action est <span className="text-red-400 font-bold">irréversible</span>.
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setDeleteId(null)} 
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors"
+              >
+                Annuler
+              </button>
+              <button 
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className="flex-1 flex justify-center items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                {isDeleting ? <Loader2 className="animate-spin" size={18} /> : 'Supprimer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
