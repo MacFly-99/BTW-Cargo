@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createContainer } from '@/app/actions/containers'
 import { X, PackagePlus, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 export function CreateContainerModal() {
   const [isOpen, setIsOpen] = useState(false)
@@ -19,7 +20,9 @@ export function CreateContainerModal() {
 
     if (result.error) {
       setError(result.error)
+      toast.error("Erreur de création", { description: result.error })
     } else {
+      toast.success("Conteneur créé", { description: "Le conteneur a été ajouté au port." })
       setIsOpen(false)
     }
     setIsPending(false)

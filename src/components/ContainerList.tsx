@@ -4,7 +4,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Search, Ship, MapPin, ChevronLeft, ChevronRight, Package, Trash2, Pencil, AlertTriangle, Loader2 } from 'lucide-react'
 import { deleteContainer, updateContainerDestination } from '@/app/actions/containers'
-import Link from 'next/link'
+import { toast } from 'sonner'
 
 const colorMap: Record<string, string> = {
   BLEU_MARINE: 'bg-blue-900',
@@ -37,7 +37,6 @@ export function ContainerList({
   const [searchTerm, setSearchTerm] = useState(currentSearch)
   const [editingId, setEditingId] = useState<string | null>(null)
   
-  // États pour la modale de suppression
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -62,23 +61,28 @@ export function ContainerList({
     return () => clearTimeout(timer)
   }, [searchTerm])
 
-  // Fonction de suppression confirmée
   const confirmDelete = async () => {
     if (!deleteId) return
     setIsDeleting(true)
     const res = await deleteContainer(deleteId)
+    
     if (res.error) {
-      alert(res.error) // Si erreur serveur, on prévient
+      toast.error("Erreur de suppression", { description: res.error })
     } else {
-      setDeleteId(null) // On ferme la modale
+      toast.success("Conteneur supprimé", { description: "Le conteneur a bien été retiré du port." })
+      setDeleteId(null)
     }
     setIsDeleting(false)
   }
 
   const handleUpdateDestination = async (id: string, newDest: string) => {
     const res = await updateContainerDestination(id, newDest)
-    if (res.error) alert(res.error)
-    else setEditingId(null)
+    if (res.error) {
+      toast.error("Erreur", { description: res.error })
+    } else {
+      toast.success("Destination mise à jour", { description: "Le conteneur a été redirigé." })
+      setEditingId(null)
+    }
   }
 
   return (
@@ -119,7 +123,6 @@ export function ContainerList({
       {/* --- TABLEAU --- */}
       <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
         <table className="w-full text-left text-sm text-slate-300">
-          {/* CORRECTION DE L'ERREUR : On colle les balises sans espaces */}
           <thead className="bg-slate-900/50 text-slate-400 text-xs uppercase font-medium">
             <tr>
               <th className="px-6 py-4">Code</th>
@@ -134,12 +137,8 @@ export function ContainerList({
           </thead>
           <tbody className="divide-y divide-slate-700/50">
             {containers.map((container: any) => (
-              <tr key={container.id} className="hover:bg-slate-750 transition-colors group">
-                <td className="px-6 py-4 font-mono font-medium">
-                  <Link href={`/dashboard/containers/${container.id}`} className="text-white hover:text-blue-400 transition-colors">
-                  {container.code}
-                  </Link>
-                </td>
+              <tr key={container.id} className="hover:bg-slate-750 transition-colors">
+                <td className="px-6 py-4 font-mono font-medium text-white">{container.code}</td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
                     <span className={`w-4 h-4 rounded-full border border-slate-600 shadow-sm ${colorMap[container.color] || 'bg-slate-500'}`}></span>
@@ -221,7 +220,7 @@ export function ContainerList({
         </div>
       </div>
 
-      {/* --- MODALE DE SUPPRESSION (DOUBLE CHECK) --- */}
+      {/* --- MODALE DE SUPPRESSION --- */}
       {deleteId && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md shadow-2xl p-6 text-center">
@@ -233,18 +232,10 @@ export function ContainerList({
               Êtes-vous sûr de vouloir supprimer ce conteneur ? Cette action est <span className="text-red-400 font-bold">irréversible</span>.
             </p>
             <div className="flex gap-3">
-              <button 
-                onClick={() => setDeleteId(null)} 
-                disabled={isDeleting}
-                className="flex-1 px-4 py-2 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors"
-              >
+              <button onClick={() => setDeleteId(null)} disabled={isDeleting} className="flex-1 px-4 py-2 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors">
                 Annuler
               </button>
-              <button 
-                onClick={confirmDelete}
-                disabled={isDeleting}
-                className="flex-1 flex justify-center items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
+              <button onClick={confirmDelete} disabled={isDeleting} className="flex-1 flex justify-center items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                 {isDeleting ? <Loader2 className="animate-spin" size={18} /> : 'Supprimer'}
               </button>
             </div>
