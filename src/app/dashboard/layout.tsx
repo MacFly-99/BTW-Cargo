@@ -2,9 +2,10 @@ import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { jwtVerify } from 'jose'
-import { Ship, Container, LayoutDashboard, LogOut, Package, Users, ShieldAlert } from 'lucide-react'
+import { Ship, Container, LayoutDashboard, LogOut, Users, ShieldAlert } from 'lucide-react'
 import { logout } from '@/app/actions/auth'
 import { SessionGuard } from '@/components/SessionGuard'
+import { GlobalCapacityAlert } from '@/components/GlobalCapacityAlert'
 
 const getJwtSecret = () => new TextEncoder().encode(process.env.JWT_SECRET)
 
@@ -20,7 +21,6 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
-  // On vérifie et décode le JWT
   let session: any
   try {
     const { payload } = await jwtVerify(sessionCookie.value, getJwtSecret())
@@ -28,17 +28,18 @@ export default async function DashboardLayout({
   } catch (error) {
     redirect('/login')
   }
-    return (
+
+  return (
     <div className="flex h-screen bg-slate-900 text-white">
-        {/* Verification de session */}
-        <SessionGuard />
+      <SessionGuard />
+      
       {/* Sidebar */}
       <aside className="w-64 bg-slate-950 border-r border-slate-800 flex flex-col">
         <div className="p-6 border-b border-slate-800">
           <h1 className="text-2xl font-bold text-blue-500">🚢 BTW-Cargo</h1>
           <p className="text-xs text-slate-500 mt-1">Logistique Maritime</p>
         </div>
-        
+
         <nav className="flex-1 p-4 space-y-2">
           <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-slate-300 hover:text-white">
             <LayoutDashboard size={20} />
@@ -88,8 +89,13 @@ export default async function DashboardLayout({
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        {children}
+      <main className="flex-1 overflow-y-auto flex flex-col">
+        {/* L'alerte apparaît ici, collée en haut, uniquement pour l'admin */}
+        {session.role === 'ADMIN' && <GlobalCapacityAlert />}
+        
+        <div className="flex-1">
+          {children}
+        </div>
       </main>
     </div>
   )
