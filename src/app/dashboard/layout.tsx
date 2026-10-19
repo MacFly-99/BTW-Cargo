@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { jwtVerify } from 'jose'
-import { Ship, Container, LayoutDashboard, LogOut, Package, Users } from 'lucide-react'
+import { Ship, Container, LayoutDashboard, LogOut, Package, Users, ShieldAlert } from 'lucide-react'
 import { logout } from '@/app/actions/auth'
 import { SessionGuard } from '@/components/SessionGuard'
 
@@ -57,8 +57,12 @@ export default async function DashboardLayout({
             <div className="pt-4 mt-4 border-t border-slate-800">
               <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Administration</p>
               <Link href="/dashboard/admin" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-slate-300 hover:text-white">
+                <ShieldAlert size={20} />
+                Supervision
+              </Link>
+              <Link href="/dashboard/users" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-slate-300 hover:text-white">
                 <Users size={20} />
-                Gestion Globale
+                Utilisateurs
               </Link>
             </div>
           )}
