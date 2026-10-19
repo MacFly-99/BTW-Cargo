@@ -43,7 +43,7 @@ export function AdminRealtimeStats() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex items-center justify-between">
           <div>
-            <p className="text-sm text-slate-400">Utilisateurs</p>
+            <p className="text-sm text-slate-400">Utilisateurs connectés</p>
             <p className="text-2xl font-bold">{data.totalUsers}</p>
           </div>
           <Users className="text-blue-500" size={32} />
