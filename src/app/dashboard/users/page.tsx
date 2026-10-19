@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { UserManagement } from '@/components/UserManagement'
 import { Users } from 'lucide-react'
+import { RealtimeRefresher } from '@/components/RealtimeRefresher'
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
@@ -13,6 +14,7 @@ export default async function UsersPage() {
 
   return (
     <div className="p-8">
+      <RealtimeRefresher interval={5000} /> {/* Rafraîchit toutes les 5 secondes */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold flex items-center gap-3">
           <Users className="text-blue-500" size={32} />
