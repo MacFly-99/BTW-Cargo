@@ -48,11 +48,11 @@ export default async function DashboardLayout({
             <Ship size={20} />
             Navires
           </Link>
-          <Link href="/containers" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-slate-300 hover:text-white">
+          <Link href="/dashboard/containers" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-slate-300 hover:text-white">
             <Container size={20} />
             Conteneurs
           </Link>
-          <Link href="/inventory" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-slate-300 hover:text-white">
+          <Link href="/dashboard/inventory" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-slate-300 hover:text-white">
             <Package size={20} />
             Gestion des Stocks
           </Link>
