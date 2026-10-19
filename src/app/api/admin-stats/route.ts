@@ -8,8 +8,9 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
 const getJwtSecret = () => new TextEncoder().encode(process.env.JWT_SECRET)
 
+const PORT_CAPACITY = 120000 // On centralise la capacité ici
+
 export async function GET() {
-  // 1. Vérification de sécurité (Seul l'admin peut appeler cette API)
   const cookieStore = await cookies()
   const sessionCookie = cookieStore.get('session')
   
@@ -22,7 +23,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Token invalide' }, { status: 401 })
   }
 
-  // 2. Récupération des données
+  // On récupère les données ET le nombre total de conteneurs
   const [
     totalUsers,
     recentContainers,
@@ -30,7 +31,6 @@ export async function GET() {
     shipsInTransit
   ] = await Promise.all([
     prisma.user.count(),
-    // On récupère les 5 derniers conteneurs ajoutés (pour le fil d'actualité)
     prisma.container.findMany({
       take: 5,
       orderBy: { createdAt: 'desc' },
@@ -40,11 +40,15 @@ export async function GET() {
     prisma.ship.count({ where: { status: 'IN_TRANSIT' } })
   ])
 
-  // 3. On renvoie tout ça en JSON
+  // Calcul de l'espace restant
+  const remainingSpace = PORT_CAPACITY - totalContainers
+
   return NextResponse.json({
     totalUsers,
     totalContainers,
     shipsInTransit,
-    recentContainers
+    recentContainers,
+    remainingSpace,
+    portCapacity: PORT_CAPACITY
   })
 }

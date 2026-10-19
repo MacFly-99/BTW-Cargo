@@ -2,16 +2,17 @@ import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { ContainerList } from '@/components/ContainerList'
 import { CreateContainerModal } from '@/components/CreateContainerModal'
+import { RealtimeRefresher } from '@/components/RealtimeRefresher'
 import { Box } from 'lucide-react'
 import { cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
-import { RealtimeRefresher } from '@/components/RealtimeRefresher'
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
 const getJwtSecret = () => new TextEncoder().encode(process.env.JWT_SECRET)
 
 const ITEMS_PER_PAGE = 25
+const PORT_CAPACITY = 120000
 
 export default async function ContainersPage({
   searchParams,
@@ -20,7 +21,7 @@ export default async function ContainersPage({
 }) {
   const params = await searchParams
   
-  // --- RÉCUPÉRATION DU RÔLE ---
+  // Rôle de l'utilisateur
   const cookieStore = await cookies()
   const sessionCookie = cookieStore.get('session')
   let isAdmin = false
@@ -50,7 +51,8 @@ export default async function ContainersPage({
     ]
   }
 
-  const [containers, totalCount] = await Promise.all([
+  // On récupère les conteneurs filtrés, le total filtré, ET le total global du port
+  const [containers, totalCount, totalPortContainers] = await Promise.all([
     prisma.container.findMany({
       where: whereCondition,
       take: ITEMS_PER_PAGE,
@@ -58,16 +60,21 @@ export default async function ContainersPage({
       orderBy: { createdAt: 'desc' },
       include: { ship: { select: { name: true } } }
     }),
-    prisma.container.count({ where: whereCondition })
+    prisma.container.count({ where: whereCondition }),
+    prisma.container.count() // Total global pour la barre de progression
   ])
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE)
   const destinations = ['SHANGHAI', 'SINGAPOUR', 'NINGBO_ZHOUSHAN', 'SHENZHEN', 'GUANGZHOU', 'BUSAN', 'ROTTERDAM', 'HONG_KONG', 'ANVERS', 'LOS_ANGELES']
   const colors = ['BLEU_MARINE', 'GRIS_METALLIQUE', 'BLANC', 'VERT', 'ORANGE', 'JAUNE']
+  
+  // Calcul du taux de remplissage global
+  const portFillRate = Math.min((totalPortContainers / PORT_CAPACITY) * 100, 100)
 
   return (
     <div className="p-8">
-      <RealtimeRefresher interval={1000} /> {/* Rafraîchit toutes les 10 secondes */}
+      <RealtimeRefresher interval={10000} />
+      
       <div className="mb-8 flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">
@@ -79,6 +86,36 @@ export default async function ContainersPage({
           </p>
         </div>
         <CreateContainerModal />
+      </div>
+
+      {/* --- BARRE DE REMPLISSAGE DU PORT --- */}
+      <div className="mb-8 bg-slate-800 rounded-xl border border-slate-700 p-6">
+        <div className="flex justify-between items-end mb-2">
+          <div>
+            <h2 className="text-lg font-semibold text-white">Taux de remplissage global du port</h2>
+            <p className="text-sm text-slate-400">Capacité totale : {PORT_CAPACITY.toLocaleString()} emplacements</p>
+          </div>
+          <div className="text-right">
+            <span className="text-2xl font-bold text-white">{portFillRate.toFixed(1)}%</span>
+            <p className="text-xs text-slate-400">{totalPortContainers.toLocaleString()} conteneurs</p>
+          </div>
+        </div>
+        
+        <div className="w-full h-3 bg-slate-900 rounded-full overflow-hidden mt-4">
+          <div 
+            className={`h-full rounded-full transition-all duration-1000 ${
+              portFillRate > 85 ? 'bg-red-500' : 
+              portFillRate > 60 ? 'bg-amber-500' : 
+              'bg-emerald-500'
+            }`}
+            style={{ width: `${portFillRate}%` }}
+          />
+        </div>
+        <div className="flex justify-between text-xs text-slate-500 mt-2">
+          <span>0%</span>
+          <span>50%</span>
+          <span>100% (Saturation)</span>
+        </div>
       </div>
 
       <ContainerList 
