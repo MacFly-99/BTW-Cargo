@@ -38,7 +38,7 @@ export default async function DashboardLayout({
           <h1 className="text-2xl font-bold text-blue-500">🚢 BTW-Cargo</h1>
           <p className="text-xs text-slate-500 mt-1">Logistique Maritime</p>
         </div>
-
+        
         <nav className="flex-1 p-4 space-y-2">
           <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-slate-300 hover:text-white">
             <LayoutDashboard size={20} />
@@ -50,17 +50,13 @@ export default async function DashboardLayout({
           </Link>
           <Link href="/dashboard/containers" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-slate-300 hover:text-white">
             <Container size={20} />
-            Conteneurs
-          </Link>
-          <Link href="/dashboard/inventory" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-slate-300 hover:text-white">
-            <Package size={20} />
-            Gestion des Stocks
+            Inventaire Conteneurs
           </Link>
           
           {session.role === 'ADMIN' && (
             <div className="pt-4 mt-4 border-t border-slate-800">
-              <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Admin</p>
-              <Link href="/admin" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-slate-300 hover:text-white">
+              <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Administration</p>
+              <Link href="/dashboard/admin" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-slate-300 hover:text-white">
                 <Users size={20} />
                 Gestion Globale
               </Link>
