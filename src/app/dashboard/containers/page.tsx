@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { ContainerList } from '@/components/ContainerList'
 import { Box } from 'lucide-react'
+import { CreateContainerModal } from '@/components/CreateContainerModal'
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
@@ -66,6 +67,8 @@ export default async function ContainersPage({
         <p className="text-slate-400 mt-2">
           Gérez et recherchez parmi les {totalCount.toLocaleString()} conteneurs correspondants.
         </p>
+        {/* Bouton de creation de conteneur */}
+        <CreateContainerModal />
       </div>
 
       <ContainerList 
