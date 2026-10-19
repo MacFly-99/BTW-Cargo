@@ -4,12 +4,29 @@ import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { cookies } from 'next/headers'
+import { jwtVerify } from 'jose'
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
+const getJwtSecret = () => new TextEncoder().encode(process.env.JWT_SECRET)
+
+// --- UTILITAIRE : Vérifier si l'utilisateur est Admin ---
+async function isAdmin() {
+  const cookieStore = await cookies()
+  const sessionCookie = cookieStore.get('session')
+  if (!sessionCookie) return false
+  
+  try {
+    const { payload } = await jwtVerify(sessionCookie.value, getJwtSecret())
+    return payload.role === 'ADMIN'
+  } catch {
+    return false
+  }
+}
 
 // ==========================================
-// 1. VALIDATION D'UN CONTENEUR (Opérateur)
+// 1. VALIDATION (Tous les utilisateurs connectés)
 // ==========================================
 export async function validateContainer(containerId: string) {
   try {
@@ -17,17 +34,16 @@ export async function validateContainer(containerId: string) {
       where: { id: containerId },
       data: { status: 'VALIDATED' }
     })
-    
-    // On rafraîchit le dashboard de l'opérateur
     revalidatePath('/dashboard')
-    
     return { success: true }
   } catch (error) {
     return { error: 'Impossible de valider ce conteneur.' }
   }
 }
 
-// Schéma de validation
+// ==========================================
+// 2. CRÉATION (Tous les utilisateurs connectés)
+// ==========================================
 const CreateContainerSchema = z.object({
   type: z.enum(['DRY', 'HIGH_CUBE', 'OPEN_TOP']),
   color: z.enum(['BLEU_MARINE', 'GRIS_METALLIQUE', 'BLANC', 'VERT', 'ORANGE', 'JAUNE']),
@@ -43,19 +59,14 @@ export async function createContainer(formData: FormData) {
     zone: formData.get('zone'),
   }
 
-  // Validation
   const validated = CreateContainerSchema.safeParse(rawData)
-  if (!validated.success) {
-    return { error: 'Données invalides.' }
-  }
+  if (!validated.success) return { error: 'Données invalides.' }
 
   const data = validated.data
 
-  // --- LOGIQUE DE PLACEMENT ---
-  // On cherche la dernière rangée utilisée dans cette zone pour continuer à remplir
   const lastContainer = await prisma.container.findFirst({
     where: { zone: data.zone },
-    orderBy: { row: 'desc' },
+    orderBy: [{ row: 'desc' }, { slot: 'desc' }],
     select: { row: true, slot: true }
   })
 
@@ -64,17 +75,14 @@ export async function createContainer(formData: FormData) {
 
   if (lastContainer) {
     if (lastContainer.slot < 60) {
-      // S'il reste de la place dans la rangée, on ajoute au slot suivant
       newRow = lastContainer.row
       newSlot = lastContainer.slot + 1
     } else {
-      // La rangée est pleine (60 slots), on passe à la suivante
       newRow = lastContainer.row + 1
       newSlot = 1
     }
   }
 
-  // Génération du code
   const prefixes = ['MSKU', 'MSCU', 'CMAU', 'OOLU']
   const prefix = prefixes[Math.floor(Math.random() * prefixes.length)]
   const code = `${prefix}${Math.floor(Math.random() * 9000000) + 1000000}`
@@ -89,10 +97,9 @@ export async function createContainer(formData: FormData) {
         zone: data.zone,
         row: newRow,
         slot: newSlot,
-        status: 'PENDING', // Par défaut en attente de validation
+        status: 'PENDING',
       }
     })
-
     revalidatePath('/dashboard/containers')
     return { success: true }
   } catch (error) {
@@ -100,8 +107,14 @@ export async function createContainer(formData: FormData) {
   }
 }
 
-// Action pour Supprimer un conteneur
+// ==========================================
+// 3. SUPPRESSION (Admin uniquement)
+// ==========================================
 export async function deleteContainer(id: string) {
+  if (!(await isAdmin())) {
+    return { error: 'Accès refusé. Seul un administrateur peut supprimer un conteneur.' }
+  }
+
   try {
     await prisma.container.delete({ where: { id } })
     revalidatePath('/dashboard/containers')

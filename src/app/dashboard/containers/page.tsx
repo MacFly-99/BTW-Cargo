@@ -1,11 +1,14 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { ContainerList } from '@/components/ContainerList'
-import { Box } from 'lucide-react'
 import { CreateContainerModal } from '@/components/CreateContainerModal'
+import { Box } from 'lucide-react'
+import { cookies } from 'next/headers'
+import { jwtVerify } from 'jose'
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
+const getJwtSecret = () => new TextEncoder().encode(process.env.JWT_SECRET)
 
 const ITEMS_PER_PAGE = 25
 
@@ -16,6 +19,17 @@ export default async function ContainersPage({
 }) {
   const params = await searchParams
   
+  // --- RÉCUPÉRATION DU RÔLE ---
+  const cookieStore = await cookies()
+  const sessionCookie = cookieStore.get('session')
+  let isAdmin = false
+  if (sessionCookie) {
+    try {
+      const { payload } = await jwtVerify(sessionCookie.value, getJwtSecret())
+      isAdmin = payload.role === 'ADMIN'
+    } catch {}
+  }
+
   const currentPage = Number(params.page) || 1
   const search = params.search || ''
   const typeFilter = params.type || ''
@@ -25,14 +39,9 @@ export default async function ContainersPage({
 
   const skip = (currentPage - 1) * ITEMS_PER_PAGE
 
-  // --- LOGIQUE DE RECHERCHE ET FILTRES ---
-  
   const whereCondition: any = {
     AND: [
-      // La recherche tape UNIQUEMENT dans le code on a des filtres pour des recherche plus précises
-      search ? {
-        code: { contains: search, mode: 'insensitive' }
-      } : {},
+      search ? { code: { contains: search, mode: 'insensitive' } } : {},
       typeFilter ? { type: typeFilter as any } : {},
       statusFilter ? { status: statusFilter as any } : {},
       destinationFilter ? { destination: destinationFilter as any } : {},
@@ -52,22 +61,21 @@ export default async function ContainersPage({
   ])
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE)
-
-  // On passe les listes de destinations et couleurs pour les menus déroulants
   const destinations = ['SHANGHAI', 'SINGAPOUR', 'NINGBO_ZHOUSHAN', 'SHENZHEN', 'GUANGZHOU', 'BUSAN', 'ROTTERDAM', 'HONG_KONG', 'ANVERS', 'LOS_ANGELES']
   const colors = ['BLEU_MARINE', 'GRIS_METALLIQUE', 'BLANC', 'VERT', 'ORANGE', 'JAUNE']
 
   return (
     <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold flex items-center gap-3">
-          <Box className="text-blue-500" size={32} />
-          Inventaire des Conteneurs
-        </h1>
-        <p className="text-slate-400 mt-2">
-          Gérez et recherchez parmi les {totalCount.toLocaleString()} conteneurs correspondants.
-        </p>
-        {/* Bouton de creation de conteneur */}
+      <div className="mb-8 flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-3">
+            <Box className="text-blue-500" size={32} />
+            Inventaire des Conteneurs
+          </h1>
+          <p className="text-slate-400 mt-2">
+            Gérez et recherchez parmi les {totalCount.toLocaleString()} conteneurs correspondants.
+          </p>
+        </div>
         <CreateContainerModal />
       </div>
 
@@ -83,6 +91,7 @@ export default async function ContainersPage({
         currentColor={colorFilter}
         destinations={destinations}
         colors={colors}
+        isAdmin={isAdmin}
       />
     </div>
   )
