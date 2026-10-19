@@ -3,24 +3,38 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Ship as ShipIcon, Anchor, Navigation, MapPin, Box, PackageOpen } from 'lucide-react'
+import { cookies } from 'next/headers'
+import { jwtVerify } from 'jose'
+import { DeleteShipButton } from '@/components/DeleteShipButton'
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
+const getJwtSecret = () => new TextEncoder().encode(process.env.JWT_SECRET)
 
 export default async function ShipDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  // On récupère l'ID depuis l'URL
   const { id } = await params
 
-  // On va chercher le navire ET ses conteneurs
+  // Récupération du rôle de l'utilisateur
+  const cookieStore = await cookies()
+  const sessionCookie = cookieStore.get('session')
+  let isAdmin = false
+  if (sessionCookie) {
+    try {
+      const { payload } = await jwtVerify(sessionCookie.value, getJwtSecret())
+      isAdmin = payload.role === 'ADMIN'
+    } catch {}
+  }
+
+  // Récupération du navire et de ses conteneurs
   const ship = await prisma.ship.findUnique({
     where: { id },
     include: {
       containers: {
-        take: 50, // On affiche les 50 premiers pour ne pas surcharger
+        take: 50,
         orderBy: { createdAt: 'desc' }
       },
       _count: {
@@ -29,12 +43,10 @@ export default async function ShipDetailPage({
     }
   })
 
-  // Si le navire n'existe pas, on affiche une 404
   if (!ship) {
     notFound()
   }
 
-  // Couleurs selon le statut (même logique que la liste)
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'DOCKED': return 'bg-blue-500/20 text-blue-400 border-blue-500/30'
@@ -44,7 +56,6 @@ export default async function ShipDetailPage({
     }
   }
 
-  // Icône selon le type
   const getTypeIcon = () => {
     switch (ship.type) {
       case 'SMALL': return <Navigation size={32} />
@@ -57,7 +68,6 @@ export default async function ShipDetailPage({
 
   return (
     <div className="p-8">
-      {/* Bouton retour */}
       <Link 
         href="/dashboard/ships" 
         className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors mb-6"
@@ -68,7 +78,6 @@ export default async function ShipDetailPage({
 
       {/* En-tête du Navire */}
       <div className="bg-slate-800 rounded-2xl border border-slate-700 p-8 mb-8 relative overflow-hidden">
-        {/* Effet de fond décoratif */}
         <div className="absolute top-0 right-0 p-12 opacity-5 text-white pointer-events-none">
           {getTypeIcon()}
         </div>
@@ -89,6 +98,15 @@ export default async function ShipDetailPage({
           </div>
           
           <div className="flex flex-col items-end gap-2">
+            {/* Bouton Supprimer */}
+            {isAdmin && (
+              <DeleteShipButton 
+                shipId={ship.id} 
+                shipName={ship.name} 
+                containerCount={ship._count.containers} 
+              />
+            )}
+
             <span className={`text-sm font-medium px-4 py-1.5 rounded-full border ${getStatusColor(ship.status)}`}>
               {ship.status === 'DOCKED' ? 'À Quai' : ship.status === 'IN_TRANSIT' ? 'En Mer' : 'En Maintenance'}
             </span>
@@ -113,7 +131,7 @@ export default async function ShipDetailPage({
         </div>
       </div>
 
-      {/* Liste des conteneurs à bord */}
+      {/* Liste des conteneurs */}
       <div>
         <div className="flex justify-between items-end mb-6">
           <div>
@@ -143,7 +161,11 @@ export default async function ShipDetailPage({
               <tbody className="divide-y divide-slate-700/50">
                 {ship.containers.map((container) => (
                   <tr key={container.id} className="hover:bg-slate-750 transition-colors">
-                    <td className="px-6 py-4 font-mono font-medium text-white">{container.code}</td>
+                    <td className="px-6 py-4 font-mono font-medium text-white">
+                      <Link href={`/dashboard/containers/${container.id}`} className="hover:text-blue-400 transition-colors">
+                        {container.code}
+                      </Link>
+                    </td>
                     <td className="px-6 py-4">{container.type}</td>
                     <td className="px-6 py-4 flex items-center gap-2">
                       <MapPin size={14} className="text-slate-500" />
