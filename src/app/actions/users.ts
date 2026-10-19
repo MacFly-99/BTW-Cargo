@@ -101,3 +101,46 @@ export async function deleteUser(id: string) {
     return { error: 'Erreur lors de la suppression.' }
   }
 }
+
+export async function updatePassword(formData: FormData) {
+  const cookieStore = await cookies()
+  const sessionCookie = cookieStore.get('session')
+  if (!sessionCookie) return { error: 'Session invalide.' }
+
+  try {
+    const { payload } = await jwtVerify(sessionCookie.value, getJwtSecret())
+    const userId = payload.id as string
+
+    const currentPassword = formData.get('currentPassword') as string
+    const newPassword = formData.get('newPassword') as string
+    const confirmPassword = formData.get('confirmPassword') as string
+
+    if (newPassword !== confirmPassword) {
+      return { error: 'Les nouveaux mots de passe ne correspondent pas.' }
+    }
+
+    if (newPassword.length < 6) {
+      return { error: 'Le nouveau mot de passe doit faire au moins 6 caractères.' }
+    }
+
+    // On récupère l'utilisateur pour vérifier l'ancien mot de passe
+    const user = await prisma.user.findUnique({ where: { id: userId } })
+    if (!user) return { error: 'Utilisateur introuvable.' }
+
+    const isValid = await bcrypt.compare(currentPassword, user.password)
+    if (!isValid) {
+      return { error: 'Le mot de passe actuel est incorrect.' }
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10)
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedNewPassword }
+    })
+
+    return { success: true }
+  } catch (error) {
+    return { error: 'Erreur lors de la mise à jour du mot de passe.' }
+  }
+}

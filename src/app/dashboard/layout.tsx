@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { jwtVerify } from 'jose'
-import { Ship, Container, LayoutDashboard, LogOut, Users, ShieldAlert } from 'lucide-react'
+import { Ship, Container, LayoutDashboard, LogOut, Users, ShieldAlert, UserCircle } from 'lucide-react'
 import { logout } from '@/app/actions/auth'
 import { SessionGuard } from '@/components/SessionGuard'
 import { GlobalCapacityAlert } from '@/components/GlobalCapacityAlert'
@@ -40,7 +40,7 @@ export default async function DashboardLayout({
           <p className="text-xs text-slate-500 mt-1">Logistique Maritime</p>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-slate-300 hover:text-white">
             <LayoutDashboard size={20} />
             Tableau de bord
@@ -70,6 +70,12 @@ export default async function DashboardLayout({
         </nav>
 
         <div className="p-4 border-t border-slate-800">
+          {/* Lien vers le profil */}
+          <Link href="/dashboard/profile" className="flex items-center gap-3 px-4 py-3 mb-2 rounded-lg hover:bg-slate-800 transition-colors text-slate-300 hover:text-white">
+            <UserCircle size={20} />
+            Mon Profil
+          </Link>
+
           <div className="flex items-center gap-3 mb-4 px-2">
             <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold">
               {session.name?.[0] || 'A'}
@@ -90,7 +96,6 @@ export default async function DashboardLayout({
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto flex flex-col">
-        {/* L'alerte apparaît ici, collée en haut, uniquement pour l'admin */}
         {session.role === 'ADMIN' && <GlobalCapacityAlert />}
         
         <div className="flex-1">
