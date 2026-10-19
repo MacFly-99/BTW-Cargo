@@ -3,6 +3,7 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import { ShipList } from '@/components/ShipList'
 import Link from 'next/link'
 import { ArrowLeft, Plus } from 'lucide-react'
+import { RealtimeRefresher } from '@/components/RealtimeRefresher'
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
@@ -31,6 +32,7 @@ export default async function ShipsPage({
 
   return (
     <div className="p-8">
+      <RealtimeRefresher interval={300000} /> {/* Rafraîchit toutes les 5 minutes */}
       {/* Barre d'actions avec le bouton Retour */}
       <div className="mb-6 flex justify-between items-center">
         <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">

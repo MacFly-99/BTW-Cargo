@@ -5,6 +5,7 @@ import { CreateContainerModal } from '@/components/CreateContainerModal'
 import { Box } from 'lucide-react'
 import { cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
+import { RealtimeRefresher } from '@/components/RealtimeRefresher'
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
@@ -66,6 +67,7 @@ export default async function ContainersPage({
 
   return (
     <div className="p-8">
+      <RealtimeRefresher interval={1000} /> {/* Rafraîchit toutes les 10 secondes */}
       <div className="mb-8 flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">
