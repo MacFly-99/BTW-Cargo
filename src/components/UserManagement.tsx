@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createUser, deleteUser } from '@/app/actions/users'
 import { UserPlus, Trash2, Shield, User as UserIcon, Loader2, AlertTriangle, X } from 'lucide-react'
+import { toast } from 'sonner'
 
 export function UserManagement({ initialUsers }: { initialUsers: any[] }) {
   const [isCreating, setIsCreating] = useState(false)
@@ -11,8 +12,10 @@ export function UserManagement({ initialUsers }: { initialUsers: any[] }) {
   
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  
+  // Modale d'erreur
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
-  // Création
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsPending(true)
@@ -23,28 +26,36 @@ export function UserManagement({ initialUsers }: { initialUsers: any[] }) {
 
     if (result.error) {
       setError(result.error)
+      toast.error("Erreur", { description: result.error })
       setIsPending(false)
     } else {
+      toast.success("Utilisateur créé", { description: "Le nouvel opérateur peut se connecter." })
       setIsCreating(false)
       setIsPending(false)
-      window.location.reload() // On recharge pour voir le nouvel utilisateur
+      window.location.reload()
     }
   }
 
-  // Suppression
   const confirmDelete = async () => {
     if (!deleteId) return
     setIsDeleting(true)
     const res = await deleteUser(deleteId)
     
     if (res.error) {
-      alert(res.error)
-      setIsDeleting(false)
+      // Si c'est l'erreur de suppression de son propre compte, on affiche la modale
+      if (res.error.includes('votre propre compte')) {
+        setDeleteId(null)
+        setDeleteError(res.error)
+      } else {
+        toast.error("Erreur", { description: res.error })
+        setDeleteId(null)
+      }
     } else {
+      toast.success("Utilisateur supprimé", { description: "L'accès a été révoqué." })
       setDeleteId(null)
-      setIsDeleting(false)
       window.location.reload()
     }
+    setIsDeleting(false)
   }
 
   return (
@@ -177,6 +188,27 @@ export function UserManagement({ initialUsers }: { initialUsers: any[] }) {
                 {isDeleting ? <Loader2 className="animate-spin" size={18} /> : 'Supprimer'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODALE D'ERREUR (Auto-suppression) --- */}
+      {deleteError && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md shadow-2xl p-6 text-center">
+            <div className="mx-auto w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+              <Shield className="text-red-500" size={32} />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Action impossible</h3>
+            <p className="text-slate-400 mb-6">
+              {deleteError}
+            </p>
+            <button 
+              onClick={() => setDeleteError(null)} 
+              className="w-full px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white transition-colors"
+            >
+              J'ai compris
+            </button>
           </div>
         </div>
       )}
