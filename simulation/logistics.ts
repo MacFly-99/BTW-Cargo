@@ -1,19 +1,19 @@
 export const LOGISTICS = {
   // --- CAPACITÉS PHYSIQUES RÉELLES ---
-  TRUCK_CAPACITY: 2,          // Un camion prend 2 conteneurs (40 pieds)
-  TRAIN_CAPACITY: 150,        // Un train évacue 150 conteneurs
-  CRANE_SPEED_PER_TICK: 20,   // 40 mouvements/heure = 20 par tick
+  TRUCK_CAPACITY: 2,          // Un camion prend 2 conteneurs
+  TRAIN_CAPACITY: 200,        // Un train évacue 200 conteneurs (un peu plus)
+  CRANE_SPEED_PER_TICK: 25,   // Les grues chargent 25 conteneurs par minute
   
   // --- GESTION DES FLUX ---
-  MAX_TRUCKS_PER_TICK: 15,    // Un petit convoi de 15 camions par tick
-  MAX_TRAINS_PER_TICK: 1,     // Max 1 train par tick
+  MAX_TRUCKS_PER_TICK: 10,
+  MAX_TRAINS_PER_TICK: 1,     
   
   // --- SEUILS CRITIQUES ---
-  SATURATION_THRESHOLD: 85,   
+  SATURATION_THRESHOLD: 75,   // On évacue dès 75% de saturation
   EMPTY_THRESHOLD: 40,        
   
   // --- TEMPS ---
-  TRAVEL_TIME_TICKS: 48,      
+  TRAVEL_TIME_TICKS: 30,      // Les navires reviennent vite
 }
 
 // Génère un code de conteneur réaliste

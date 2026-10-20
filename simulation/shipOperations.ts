@@ -11,7 +11,8 @@ export async function simulateShipOperations(prisma: PrismaClient) {
   for (const ship of fullShips) {
     const fillRate = (ship._count.containers / ship.capacity) * 100
     
-    if (fillRate >= 95) {
+    // On laisse partir à 90% pour fluidifier
+    if (fillRate >= 90) {
       await prisma.ship.update({
         where: { id: ship.id },
         data: { status: 'IN_TRANSIT' }
@@ -20,7 +21,7 @@ export async function simulateShipOperations(prisma: PrismaClient) {
     }
   }
 
-  // 2. RETOUR DES NAVIRES (simulation aléatoire pour l'instant)
+  // 2. RETOUR DES NAVIRES (simulation aléatoire)
   const shipsInTransit = await prisma.ship.findMany({
     where: { status: 'IN_TRANSIT' }
   })
@@ -36,7 +37,7 @@ export async function simulateShipOperations(prisma: PrismaClient) {
     }
   }
 
-  // 3. CHARGEMENT/DÉCHARGEMENT (Les grues travaillent à vitesse réelle)
+  // 3. CHARGEMENT/DÉCHARGEMENT (Les grues travaillent)
   const dockedShips = await prisma.ship.findMany({
     where: { status: 'DOCKED' },
     include: { _count: { select: { containers: true } } }
