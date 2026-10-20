@@ -77,3 +77,23 @@ export async function verifySession() {
     return { valid: false }
   }
 }
+
+export async function updateLastSeen() {
+  const cookieStore = await cookies()
+  const sessionCookie = cookieStore.get('session')
+  if (!sessionCookie) return { success: false }
+
+  try {
+    const { payload } = await jwtVerify(sessionCookie.value, getJwtSecret())
+    const userId = payload.id as string
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { lastSeen: new Date() }
+    })
+
+    return { success: true }
+  } catch (error) {
+    return { success: false }
+  }
+}

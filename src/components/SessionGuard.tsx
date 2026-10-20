@@ -2,24 +2,33 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { verifySession } from '@/app/actions/auth'
+import { verifySession, updateLastSeen } from '@/app/actions/auth'
 
 export function SessionGuard() {
   const router = useRouter()
 
   useEffect(() => {
-    // On vérifie la session toutes les 3 secondes
-    const interval = setInterval(async () => {
+    // 1. Vérifie la validité du token (toutes les 5 sec)
+    const sessionInterval = setInterval(async () => {
       const result = await verifySession()
-      
-      // Si la session n'est plus valide, on redirige immédiatement vers login
       if (!result.valid) {
         router.push('/login')
       }
-    }, 3000)
+    }, 5000)
 
-    return () => clearInterval(interval)
+    // 2. Met à jour le lastSeen (toutes les 2 minutes)
+    // On le fait une première fois au chargement
+    updateLastSeen() 
+    
+    const heartbeatInterval = setInterval(async () => {
+      await updateLastSeen()
+    }, 60000) // 60 000 ms = 1 minute
+
+    return () => {
+      clearInterval(sessionInterval)
+      clearInterval(heartbeatInterval)
+    }
   }, [router])
 
-  return null // Ce composant n'affiche rien, il travaille en arrière-plan
+  return null
 }
