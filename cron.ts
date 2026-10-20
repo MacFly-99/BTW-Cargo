@@ -22,9 +22,9 @@ cron.schedule('* * * * *', async () => {
 })
 
 // ==========================================
-// TÂCHE 2 : Flux logistique complet (Toutes les 2 min)
+// TÂCHE 2 : Flux logistique complet (Toutes les 1 minute)
 // ==========================================
-cron.schedule('*/2 * * * *', async () => {
+cron.schedule('* * * * *', async () => {
   console.log('📦 [CRON] Cycle logistique global...')
 
   try {
@@ -44,20 +44,19 @@ cron.schedule('*/2 * * * *', async () => {
       // ÉTAT VIDE : Arrivage massif (on fait venir des camions en masse)
       console.log(`📉 PORT VIDE : ${fillRate.toFixed(1)}%. Arrivage massif de camions.`)
       
-      // On simule 5 vagues de camions d'un coup
       for (let i = 0; i < 5; i++) {
         await simulateTruckArrivals(prisma)
       }
     } 
     else {
-      // ÉTAT NORMAL : Flux fluide (camions + trains normaux)
+      // ÉTAT NORMAL : Flux fluide
       console.log(`✅ FLUX NORMAL : ${fillRate.toFixed(1)}%. Activité standard.`)
       
-      // 1. Les camions arrivent
+      // Les camions arrivent
       await simulateTruckArrivals(prisma)
       
-      // 2. Un train normal évacue (1 sur 3 de chance)
-      if (Math.random() < 0.33) {
+      // ET on évacue systématiquement par train si on est au-dessus de 60%
+      if (fillRate > 60) {
         await simulateTrainEvacuation(prisma, false)
       }
     }
