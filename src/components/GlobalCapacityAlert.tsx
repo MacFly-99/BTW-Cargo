@@ -7,26 +7,37 @@ export function GlobalCapacityAlert() {
   const [isVisible, setIsVisible] = useState(false)
   const [remainingSpace, setRemainingSpace] = useState<number>(0)
   const [portCapacity, setPortCapacity] = useState<number>(120000)
+  
+  // État pour savoir si l'alerte a déjà été fermée par l'utilisateur
   const [isDismissed, setIsDismissed] = useState(false)
 
   useEffect(() => {
+    // 1. Au chargement, on vérifie si l'alerte a déjà été fermée dans le localStorage
+    const dismissed = localStorage.getItem('capacityAlertDismissed')
+    if (dismissed === 'true') {
+      setIsDismissed(true)
+    }
+
+    // 2. On vérifie la capacité toutes les 10 secondes
     const checkCapacity = async () => {
       try {
         const res = await fetch('/api/admin-stats')
         if (res.ok) {
           const data = await res.json()
-          
           const isCritical = data.remainingSpace <= 10000
           
-          // Si c'est critique ET que l'utilisateur ne l'a pas fermé
+          // Si c'est critique ET que l'utilisateur n'a pas fermé l'alerte
           if (isCritical && !isDismissed) {
             setRemainingSpace(data.remainingSpace)
             setPortCapacity(data.portCapacity)
             setIsVisible(true)
           } else {
             setIsVisible(false)
-            // Si l'espace redevient bon, on réinitialise le "dismissed"
-            if (!isCritical) setIsDismissed(false)
+            // Si l'espace redevient bon, on réinitialise le "dismissed" pour une future alerte
+            if (!isCritical) {
+              localStorage.removeItem('capacityAlertDismissed')
+              setIsDismissed(false)
+            }
           }
         }
       } catch (error) {
@@ -34,7 +45,6 @@ export function GlobalCapacityAlert() {
       }
     }
 
-    // Vérification immédiate, puis toutes les 10 secondes
     checkCapacity()
     const interval = setInterval(checkCapacity, 10000)
     return () => clearInterval(interval)
@@ -43,6 +53,8 @@ export function GlobalCapacityAlert() {
   const handleDismiss = () => {
     setIsVisible(false)
     setIsDismissed(true)
+    // On sauvegarde dans localStorage pour que ça persiste après rechargement
+    localStorage.setItem('capacityAlertDismissed', 'true')
   }
 
   if (!isVisible) return null

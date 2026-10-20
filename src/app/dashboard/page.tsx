@@ -5,6 +5,7 @@ import { jwtVerify } from 'jose'
 import { redirect } from 'next/navigation'
 import { UserDashboardClient } from '@/components/UserDashboardClient'
 import { RealtimeRefresher } from '@/components/RealtimeRefresher'
+import { BroadcastBanner } from '@/components/BroadcastBanner'
 import { Ship, Container, Anchor, MapPin, ClipboardCheck, TrendingUp, PieChart } from 'lucide-react'
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
@@ -29,14 +30,22 @@ export default async function DashboardPage() {
   // VUE UTILISATEUR (MÉTIER / OPÉRATEUR)
   // ==========================================
   if (session.role !== 'ADMIN') {
-    const pendingContainers = await prisma.container.findMany({
-      where: { status: 'PENDING' },
-      take: 10,
-      orderBy: { createdAt: 'desc' }
-    })
+    // On récupère les conteneurs à valider ET le dernier message de tour de contrôle
+    const [pendingContainers, latestBroadcast] = await Promise.all([
+      prisma.container.findMany({
+        where: { status: 'PENDING' },
+        take: 10,
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.broadcast.findFirst({
+        orderBy: { createdAt: 'desc' }
+      })
+    ])
 
     return (
-      <div className="p-8">        
+      <div className="p-8">
+        <RealtimeRefresher interval={10000} />
+        
         <div className="mb-8">
           <h1 className="text-3xl font-bold flex items-center gap-3">
             <ClipboardCheck className="text-blue-500" size={32} />
@@ -45,6 +54,10 @@ export default async function DashboardPage() {
           <p className="text-slate-400 mt-2">Voici les actions qui vous attendent aujourd'hui.</p>
         </div>
 
+       {/* BANDEAU DE MESSAGE DE TOUR DE CONTRÔLE */}
+        {latestBroadcast && (
+          <BroadcastBanner message={latestBroadcast} />
+        )}
         <UserDashboardClient initialContainers={pendingContainers} />
       </div>
     )
