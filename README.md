@@ -1,0 +1,302 @@
+# 🚢 BTW-Cargo
+
+> Plateforme de gestion logistique maritime et jumeau numérique (Digital Twin) d'un port à conteneurs.
+
+**🎓 Projet de formation — Session 2026**
+
+---
+
+## 📋 Sommaire
+
+1. 🎯 Présentation
+2. ✨ Fonctionnalités
+3. 🛠️ Stack technique
+4. 🏗️ Architecture
+5. 🚀 Installation locale
+6. 🌐 Déploiement
+7. 🧪 Tests
+8. 🔒 Sécurité
+9. 📁 Structure du projet
+10. 👤 Auteur
+
+---
+
+## 🎯 Présentation
+
+**BTW-Cargo** est une plateforme de gestion logistique maritime conçue comme un **jumeau numérique (Digital Twin)** d'un port à conteneurs.
+
+Elle a été développée dans le cadre d'un projet de formation avec pour objectifs :
+
+- ✅ Mettre en œuvre une **architecture full-stack moderne** (Next.js + Prisma + PostgreSQL).
+- ✅ Démontrer la maîtrise des **architectures temps réel** (CRON, simulation).
+- ✅ Assurer une **sécurité de niveau production** (JWT, RBAC, rate limiting, security headers).
+
+---
+
+## ✨ Fonctionnalités
+
+### 👤 Visiteur (non authentifié)
+
+- Consulter la page d'accueil
+- Se connecter à l'application
+
+### 👥 Utilisateur connecté (ROLE_USER)
+
+- Accéder au **Dashboard Opérateur**
+- Valider les chargements de conteneurs
+- Consulter la **messagerie** du Tour de Contrôle
+- Gérer son profil et son mot de passe
+
+### 🛡️ Administrateur (ROLE_ADMIN)
+
+- Accéder au **Dashboard Admin** avec statistiques en temps réel
+- Gérer la **flotte de navires** (CRUD complet)
+- Gérer l'**inventaire des conteneurs** (70 000+)
+- Gérer les **utilisateurs** (création, suppression)
+- Diffuser des **messages** via le Tour de Contrôle
+- Superviser la **simulation** du port
+
+---
+
+## 🛠️ Stack technique
+
+### ⚙️ Backend
+
+| Technologie | Version | Rôle |
+|-------------|---------|------|
+| Next.js | 15 | Framework full-stack (App Router) |
+| TypeScript | 5 | Langage |
+| PostgreSQL | 16 | Base de données |
+| Prisma | 7 | ORM |
+| Node-Cron | 3.x | Simulation temps réel |
+| JWT (jose) | 6.x | Authentification |
+| Bcrypt | 2.x | Hachage des mots de passe |
+| Zod | 3.x | Validation des données |
+
+### 🎨 Frontend
+
+| Technologie | Version | Rôle |
+|-------------|---------|------|
+| React | 19 | Bibliothèque UI |
+| Tailwind CSS | 4.x | Framework CSS |
+| Lucide React | 0.x | Icônes |
+| Sonner | 1.x | Notifications (Toasts) |
+
+### 🧰 Outils
+
+- **Git + GitHub** : versioning
+- **Docker** : conteneur PostgreSQL
+- **Prisma Studio** : exploration BDD
+
+---
+
+## 🏗️ Architecture
+
+L'application suit une **architecture full-stack découplée** :
+
+### 🔄 Flux utilisateur
+
+1. **Utilisateur** (navigateur web)
+2. ↓ HTTPS
+3. **Next.js** héberge le frontend et le backend (Server Actions + API Routes)
+4. ↓ Requêtes SQL
+5. **PostgreSQL** (Docker) pour les données métier
+6. ↓ CRON
+7. **Node-Cron** simule la vie du port en arrière-plan
+
+### 📦 Composants et responsabilités
+
+| Composant | Rôle |
+|-----------|------|
+| 🎨 **Next.js (Frontend)** | Interface utilisateur, routage App Router |
+| 🐘 **Next.js (Backend)** | Server Actions, API Routes, authentification JWT |
+| 🗄️ **PostgreSQL (Docker)** | Données métier (users, ships, containers, broadcasts) |
+| ⏱️ **Node-Cron** | Simulation logistique (navires, camions, trains) |
+
+### 💡 Principes
+
+- **Full-stack Next.js** : frontend et backend dans le même projet.
+- **Server Actions** : communication sécurisée entre client et serveur.
+- **Prisma** : ORM type-safe pour PostgreSQL.
+- **CRON** : simulation autonome du port.
+
+---
+
+## 🚀 Installation locale
+
+### 📋 Prérequis
+
+- Node.js 18.17+
+- pnpm 8+
+- Docker Desktop
+- Git
+
+### 🔧 Étapes
+
+**1️⃣ Cloner le dépôt**
+
+```bash
+git clone https://github.com/votre-username/btw-cargo.git
+cd btw-cargo
+
+**2️⃣ Installer les dépendances**
+
+```bash
+pnpm install
+
+**3️⃣ Lancer PostgreSQL avec Docker**
+
+```bash
+docker run --name btw-cargo-db \
+  -e POSTGRES_PASSWORD=password \
+  -e POSTGRES_USER=user \
+  -e POSTGRES_DB=btw_cargo \
+  -p 5432:5432 \
+  -d postgres:16
+
+**4️⃣ Créer le fichier .env**
+
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/btw_cargo?schema=public"
+JWT_SECRET="votre_secret_tres_long"
+ADMIN_EMAIL="admin@btwcargo.com"
+ADMIN_PASSWORD="votre_mot_de_passe_admin"
+OPERATOR_EMAIL="operateur@btwcargo.com"
+OPERATOR_PASSWORD="votre_mot_de_passe_user"
+
+**5️⃣ Appliquer le schéma Prisma**
+
+```bash
+npx prisma db push
+
+**6️⃣ Remplir la base de données**
+
+```bash
+pnpm seed
+
+**7️⃣ Lancer l'application**
+
+```bash
+pnpm dev
+
+### 🌐 Accès
+
+- **Application** : http://localhost:3000
+
+### 🔑 Comptes de test
+
+| Rôle | Email | Mot de passe |
+|------|-------|--------------|
+| 👑 Administrateur | admin@btwcargo.com | votre_mot_de_passe_admin |
+| 👤 Opérateur | operateur@btwcargo.com | votre_mot_de_passe_user |
+
+---
+
+## 🌐 Déploiement
+
+### 📦 Composants en production
+
+| Composant | Plateforme | URL |
+|-----------|-----------|-----|
+| 🎨 Application | Vercel | (à venir) |
+| 🗄️ Base de données | Neon.tech | (à venir) |
+
+### ⚙️ Procédure simplifiée
+
+1. **Frontend/Backend** : déployé sur Vercel.
+2. **Base de données** : provisionnée sur Neon.tech (PostgreSQL Serverless).
+3. **CRON** : configuré via Vercel Cron Jobs.
+
+---
+
+## 🧪 Tests
+
+### 🔬 Tests manuels
+
+- Connexion avec les comptes de test
+- Validation des conteneurs (Opérateur)
+- Création/suppression de navires (Admin)
+- Envoi de messages (Tour de Contrôle)
+- Vérification de la simulation (CRON)
+
+---
+
+## 🔒 Sécurité
+
+### 🛡️ Mesures en place
+
+- **Authentification JWT** avec cookies HttpOnly.
+- **RBAC** (Role-Based Access Control) : Admin / Opérateur.
+- **Rate Limiting** sur le login (5 tentatives / minute).
+- **Sanitization** des messages (anti-XSS).
+- **Security Headers** : X-Frame-Options, X-Content-Type-Options, Referrer-Policy.
+- **Validation Zod** sur toutes les Server Actions.
+- **Secrets isolés** : fichier .env exclu du dépôt Git.
+
+---
+
+## 📁 Structure du projet
+
+```text
+btw-cargo/
+├── prisma/
+│   ├── schema.prisma               🗄️ Modèles (User, Ship, Container, Broadcast)
+├── public/
+│   ├── blue-container.jpg          🖼️ Images conteneurs (6 couleurs)
+│   ├── Le_Titan.jpg                🖼️ Images navires (12 navires)
+│   └── ...
+├── simulation/
+│   ├── logistics.ts                ⚙️ Constantes, helpers, générateurs
+│   ├── shipOperations.ts           🚢 Arrivées, départs, chargements
+│   ├── truckOperations.ts          🚚 Flux routiers (import/export)
+│   ├── trainOperations.ts          🚂 Flux ferroviaires et urgences
+│   ├── maintenance.ts              🔧 Rotation de maintenance
+│   └── README.md                   
+├── src/
+│   ├── app/
+│   │   ├── dashboard/              📊 Layout et pages protégées
+│   │   │   ├── admin/              🛡️ Supervision + Tour de Contrôle
+│   │   │   ├── containers/         📦 Inventaire + Détail
+│   │   │   ├── ships/              🚢 Flotte + Détail
+│   │   │   ├── users/              👥 Gestion des utilisateurs
+│   │   │   ├── messages/           💬 Historique des messages
+│   │   │   └── profile/            👤 Profil utilisateur
+│   │   ├── login/                  🔐 Page de connexion
+│   │   ├── actions/                ⚡ Server Actions (auth, ships, containers, users, broadcast)
+│   │   └── api/                    📡 API Routes (admin-stats, add-test-container)
+│   ├── components/                 🧩 Composants réutilisables
+│   │   ├── ContainerList.tsx
+│   │   ├── ShipList.tsx
+│   │   ├── UserManagement.tsx
+│   │   ├── BroadcastBanner.tsx
+│   │   ├── BroadcastForm.tsx
+│   │   ├── CreateContainerModal.tsx
+│   │   ├── CreateShipModal.tsx
+│   │   ├── DeleteShipButton.tsx
+│   │   ├── GlobalCapacityAlert.tsx
+│   │   ├── Logo.tsx
+│   │   └── ...
+│   └── lib/                        📚 Utilitaires (db, auth, constants)
+├── cron.ts                         ⏱️ Point d'entrée du CRON de simulation
+├── seed.ts                         🌱 Script de remplissage initial
+├── next.config.ts                  ⚙️ Configuration Next.js
+├── middleware.ts                   🛡️ Protection des routes
+├── package.json
+├── pnpm-lock.yaml
+└── README.md
+
+---
+
+## 👤 Auteur
+
+**🎓 Matteo Ventura**
+
+- Projet d'entrainement — 2026
+- 🐙 GitHub : [MacFly-99](https://github.com/MacFly-99)
+- 🌐 Application : [BTW-Cargo](https://btw-cargo.vercel.app) *(à venir)*
+
+---
+
+## 📄 Licence
+
+Projet réalisé pour le plaisir . Usage pédagogique uniquement.
