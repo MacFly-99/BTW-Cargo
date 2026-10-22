@@ -20,21 +20,21 @@ const routes = [
   { main: Port.GUANGZHOU, secondary: [Port.SHENZHEN] },
 ]
 
-// --- IMAGES DE NAVIRES ---
-  const shipsData = [
-    { name: 'Le Petit Prince', type: ShipType.SMALL, capacity: 500, status: ShipStatus.DOCKED, route: routes[0], imageUrl: "/Le_Petit_Prince.jpg" },
-    { name: 'La Perle', type: ShipType.SMALL, capacity: 500, status: ShipStatus.DOCKED, route: routes[1], imageUrl: "/La_Perle.jpg" },
-    { name: 'L\'Étoile', type: ShipType.SMALL, capacity: 500, status: ShipStatus.IN_TRANSIT, route: routes[2], imageUrl: "/L_Etoile.jpg" },
-    { name: 'Le Corsaire', type: ShipType.SMALL, capacity: 500, status: ShipStatus.DOCKED, route: routes[3], imageUrl: "/Le_Corsaire.jpg" },
-    { name: 'Le Conquérant', type: ShipType.MEDIUM, capacity: 2000, status: ShipStatus.DOCKED, route: routes[4], imageUrl: "/Le_Conquerant.jpg" },
-    { name: 'La Sirène', type: ShipType.MEDIUM, capacity: 2000, status: ShipStatus.IN_TRANSIT, route: routes[0], imageUrl: "/La_Sirene.jpg" },
-    { name: 'Le Poséidon', type: ShipType.MEDIUM, capacity: 2000, status: ShipStatus.DOCKED, route: routes[1], imageUrl: "/Le_Poseidon.jpg" },
-    { name: 'L\'Océan', type: ShipType.MEDIUM, capacity: 2000, status: ShipStatus.MAINTENANCE, route: routes[2], imageUrl: "/L_Ocean.jpg" },
-    { name: 'Le Titan', type: ShipType.LARGE, capacity: 8000, status: ShipStatus.DOCKED, route: routes[3], imageUrl: "/Le_Titan.jpg" },
-    { name: 'Le Colosse', type: ShipType.LARGE, capacity: 8000, status: ShipStatus.IN_TRANSIT, route: routes[4], imageUrl: "/Le_Colosse.jpg" },
-    { name: 'Le Léviathan', type: ShipType.ULTRA_LARGE, capacity: 20000, status: ShipStatus.DOCKED, route: routes[0], imageUrl: "/Le_Leviathan.jpg" },
-    { name: 'Le Béhémoth', type: ShipType.ULTRA_LARGE, capacity: 20000, status: ShipStatus.DOCKED, route: routes[1], imageUrl: "/Le_Behemoth.jpg" },
-  ]
+// --- IMAGES LOCALES DES NAVIRES ---
+const shipsData = [
+  { name: 'Le Petit Prince', type: ShipType.SMALL, capacity: 500, status: ShipStatus.DOCKED, route: routes[0], imageUrl: "/Le_Petit_Prince.jpg" },
+  { name: 'La Perle', type: ShipType.SMALL, capacity: 500, status: ShipStatus.DOCKED, route: routes[1], imageUrl: "/La_Perle.jpg" },
+  { name: 'L\'Étoile', type: ShipType.SMALL, capacity: 500, status: ShipStatus.IN_TRANSIT, route: routes[2], imageUrl: "/L_Etoile.jpg" },
+  { name: 'Le Corsaire', type: ShipType.SMALL, capacity: 500, status: ShipStatus.DOCKED, route: routes[3], imageUrl: "/Le_Corsaire.jpg" },
+  { name: 'Le Conquérant', type: ShipType.MEDIUM, capacity: 2000, status: ShipStatus.DOCKED, route: routes[4], imageUrl: "/Le_Conquerant.jpg" },
+  { name: 'La Sirène', type: ShipType.MEDIUM, capacity: 2000, status: ShipStatus.IN_TRANSIT, route: routes[0], imageUrl: "/La_Sirene.jpg" },
+  { name: 'Le Poséidon', type: ShipType.MEDIUM, capacity: 2000, status: ShipStatus.DOCKED, route: routes[1], imageUrl: "/Le_Poseidon.jpg" },
+  { name: 'L\'Océan', type: ShipType.MEDIUM, capacity: 2000, status: ShipStatus.MAINTENANCE, route: routes[2], imageUrl: "/L_Ocean.jpg" },
+  { name: 'Le Titan', type: ShipType.LARGE, capacity: 8000, status: ShipStatus.DOCKED, route: routes[3], imageUrl: "/Le_Titan.jpg" },
+  { name: 'Le Colosse', type: ShipType.LARGE, capacity: 8000, status: ShipStatus.IN_TRANSIT, route: routes[4], imageUrl: "/Le_Colosse.jpg" },
+  { name: 'Le Léviathan', type: ShipType.ULTRA_LARGE, capacity: 20000, status: ShipStatus.DOCKED, route: routes[0], imageUrl: "/Le_Leviathan.jpg" },
+  { name: 'Le Béhémoth', type: ShipType.ULTRA_LARGE, capacity: 20000, status: ShipStatus.DOCKED, route: routes[1], imageUrl: "/Le_Behemoth.jpg" },
+]
 
 const ZONES = [
   { name: 'Terminal Nord', startRow: 1, endRow: 500 },
@@ -81,7 +81,7 @@ async function main() {
   await prisma.user.deleteMany()
   await prisma.broadcast.deleteMany()
 
-  // Admin & Opérateur
+  // --- UTILISATEURS ---
   console.log('👤 Création des utilisateurs...')
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@btwcargo.com'
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123'
@@ -99,7 +99,7 @@ async function main() {
     data: { email: operatorEmail, password: hashedOperatorPassword, name: 'Agent de Quai', role: 'USER' }
   })
 
-  // Navires
+  // --- NAVIRES ---
   console.log('⛴️ Création des 12 navires...')
   const shipsWithFillTracker: any[] = []
 
@@ -111,16 +111,17 @@ async function main() {
         capacity: ship.capacity,
         status: ship.status,
         destination: ship.route.main,
-        imageUrl: ship.imageUrl // <-- L'IMAGE EST ICI
+        imageUrl: ship.imageUrl
       }
     })
     
     shipsWithFillTracker.push({ ...createdShip, currentFill: 0, route: ship.route })
   }
 
-  // Conteneurs
-  console.log('📦 Génération de 100 000 conteneurs...')
-  const totalContainers = 100000
+  // --- CONTENEURS ---
+  // ON COMMENCE AVEC 70 000 POUR UN DÉMARRAGE À ~58%
+  console.log('📦 Génération de 70 000 conteneurs...')
+  const totalContainers = 70000
   const batchSize = 5000 
 
   for (let i = 0; i < totalContainers; i += batchSize) {
@@ -138,14 +139,20 @@ async function main() {
       let assignedShip = null
       let containerDestination = ports[Math.floor(Math.random() * ports.length)]
       
-      const availableShip = shipsWithFillTracker.find(ship => {
-        const isDestinationValid = ship.route.main === containerDestination || ship.route.secondary.includes(containerDestination)
-        return isDestinationValid && ship.currentFill < ship.capacity
-      })
+      // On n'assigne un conteneur à un navire que 50% du temps
+      // Ça permet de garder du stock au port et de ne pas vider tous les navires d'un coup
+      const shouldAssignToShip = Math.random() < 0.5
 
-      if (availableShip) {
-        assignedShip = availableShip
-        assignedShip.currentFill += 1
+      if (shouldAssignToShip) {
+        const availableShip = shipsWithFillTracker.find(ship => {
+          const isDestinationValid = ship.route.main === containerDestination || ship.route.secondary.includes(containerDestination)
+          return isDestinationValid && ship.currentFill < ship.capacity
+        })
+
+        if (availableShip) {
+          assignedShip = availableShip
+          assignedShip.currentFill += 1
+        }
       }
 
       const containerType = assignedShip 
