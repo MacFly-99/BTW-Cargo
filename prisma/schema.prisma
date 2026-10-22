@@ -64,6 +64,7 @@ model Ship {
   destination Port?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  imageUrl    String?
 
   containers Container[] // Relation : un navire a plusieurs conteneurs
 }

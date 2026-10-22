@@ -18,7 +18,6 @@ export default async function ShipDetailPage({
 }) {
   const { id } = await params
 
-  // Récupération du rôle de l'utilisateur
   const cookieStore = await cookies()
   const sessionCookie = cookieStore.get('session')
   let isAdmin = false
@@ -29,7 +28,6 @@ export default async function ShipDetailPage({
     } catch {}
   }
 
-  // Récupération du navire et de ses conteneurs
   const ship = await prisma.ship.findUnique({
     where: { id },
     include: {
@@ -77,55 +75,61 @@ export default async function ShipDetailPage({
       </Link>
 
       {/* En-tête du Navire */}
-      <div className="bg-slate-800 rounded-2xl border border-slate-700 p-8 mb-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-12 opacity-5 text-white pointer-events-none">
-          {getTypeIcon()}
+      <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden mb-8 relative">
+        <div className="h-64 w-full relative">
+          <img 
+            src={ship.imageUrl || "/Le_Titan.jpg"} 
+            alt={ship.name}
+            className="w-full h-full object-cover opacity-60"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-800 to-transparent"></div>
         </div>
 
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
-          <div className="flex items-center gap-6">
-            <div className="p-4 bg-slate-900 rounded-xl text-blue-400 shadow-inner">
-              {getTypeIcon()}
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2">{ship.name}</h1>
-              <div className="flex items-center gap-4 text-sm">
-                <span className="text-slate-400">Type : <span className="text-slate-200 font-medium">{ship.type.replace('_', ' ')}</span></span>
-                <span className="text-slate-600">|</span>
-                <span className="text-slate-400">Destination : <span className="text-slate-200 font-medium">{ship.destination}</span></span>
+        <div className="p-8 relative -mt-20">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+            <div className="flex items-center gap-6">
+              <div className="p-4 bg-slate-900 rounded-xl text-blue-400 shadow-inner border border-slate-700">
+                {getTypeIcon()}
               </div>
-            </div>
-          </div>
-          
-          <div className="flex flex-col items-end gap-2">
-            {/* Bouton Supprimer */}
-            {isAdmin && (
-              <DeleteShipButton 
-                shipId={ship.id} 
-                shipName={ship.name} 
-                containerCount={ship._count.containers} 
-              />
-            )}
-
-            <span className={`text-sm font-medium px-4 py-1.5 rounded-full border ${getStatusColor(ship.status)}`}>
-              {ship.status === 'DOCKED' ? 'À Quai' : ship.status === 'IN_TRANSIT' ? 'En Mer' : 'En Maintenance'}
-            </span>
-            <div className="text-right mt-2">
-              <p className="text-xs text-slate-400 mb-1">Taux de remplissage</p>
-              <div className="flex items-center gap-3">
-                <div className="w-48 h-2 bg-slate-900 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-blue-500 rounded-full" 
-                    style={{ width: `${Math.min((ship._count.containers / ship.capacity) * 100, 100)}%` }}
-                  />
+              <div>
+                <h1 className="text-4xl font-bold text-white mb-2">{ship.name}</h1>
+                <div className="flex items-center gap-4 text-sm">
+                  <span className="text-slate-400">Type : <span className="text-slate-200 font-medium">{ship.type.replace('_', ' ')}</span></span>
+                  <span className="text-slate-600">|</span>
+                  <span className="text-slate-400">Destination : <span className="text-slate-200 font-medium">{ship.destination}</span></span>
                 </div>
-                <span className="text-sm font-bold text-white">
-                  {Math.round((ship._count.containers / ship.capacity) * 100)}%
-                </span>
               </div>
-              <p className="text-xs text-slate-500 mt-1">
-                {ship._count.containers.toLocaleString()} / {ship.capacity.toLocaleString()} TEU
-              </p>
+            </div>
+            
+            <div className="flex flex-col items-end gap-2">
+              {isAdmin && (
+                <DeleteShipButton 
+                  shipId={ship.id} 
+                  shipName={ship.name} 
+                  containerCount={ship._count.containers} 
+                />
+              )}
+
+              <span className={`text-sm font-medium px-4 py-1.5 rounded-full border ${getStatusColor(ship.status)}`}>
+                {ship.status === 'DOCKED' ? 'À Quai' : ship.status === 'IN_TRANSIT' ? 'En Mer' : 'En Maintenance'}
+              </span>
+              <div className="text-right mt-2">
+                <p className="text-xs text-slate-400 mb-1">Taux de remplissage</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-48 h-2 bg-slate-900 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-blue-500 rounded-full" 
+                      style={{ width: `${Math.min((ship._count.containers / ship.capacity) * 100, 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-sm font-bold text-white">
+                    {Math.round((ship._count.containers / ship.capacity) * 100)}%
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  {ship._count.containers.toLocaleString()} / {ship.capacity.toLocaleString()} TEU
+                </p>
+              </div>
             </div>
           </div>
         </div>

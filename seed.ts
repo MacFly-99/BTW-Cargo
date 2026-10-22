@@ -3,18 +3,15 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import bcrypt from 'bcryptjs'
 import 'dotenv/config'
 
-// Configuration de Prisma avec l'adaptateur
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
 
-// --- 1. DÉFINITION DES PORTS ---
 const ports = [
   Port.SHANGHAI, Port.SINGAPOUR, Port.NINGBO_ZHOUSHAN, Port.SHENZHEN, 
   Port.GUANGZHOU, Port.BUSAN, Port.ROTTERDAM, Port.HONG_KONG, 
   Port.ANVERS, Port.LOS_ANGELES
 ]
 
-// --- 2. DÉFINITION DES ROUTES MARITIMES ---
 const routes = [
   { main: Port.SHANGHAI, secondary: [Port.NINGBO_ZHOUSHAN, Port.SHENZHEN] },
   { main: Port.SINGAPOUR, secondary: [Port.BUSAN, Port.HONG_KONG] },
@@ -23,23 +20,22 @@ const routes = [
   { main: Port.GUANGZHOU, secondary: [Port.SHENZHEN] },
 ]
 
-// --- 3. CONFIGURATION DES NAVIRES ---
-const shipsData = [
-  { name: 'Le Petit Prince', type: ShipType.SMALL, capacity: 500, status: ShipStatus.DOCKED, route: routes[0] },
-  { name: 'La Perle', type: ShipType.SMALL, capacity: 500, status: ShipStatus.DOCKED, route: routes[1] },
-  { name: 'L\'Étoile', type: ShipType.SMALL, capacity: 500, status: ShipStatus.IN_TRANSIT, route: routes[2] },
-  { name: 'Le Corsaire', type: ShipType.SMALL, capacity: 500, status: ShipStatus.DOCKED, route: routes[3] },
-  { name: 'Le Conquérant', type: ShipType.MEDIUM, capacity: 2000, status: ShipStatus.DOCKED, route: routes[4] },
-  { name: 'La Sirène', type: ShipType.MEDIUM, capacity: 2000, status: ShipStatus.IN_TRANSIT, route: routes[0] },
-  { name: 'Le Poséidon', type: ShipType.MEDIUM, capacity: 2000, status: ShipStatus.DOCKED, route: routes[1] },
-  { name: 'L\'Océan', type: ShipType.MEDIUM, capacity: 2000, status: ShipStatus.MAINTENANCE, route: routes[2] },
-  { name: 'Le Titan', type: ShipType.LARGE, capacity: 8000, status: ShipStatus.DOCKED, route: routes[3] },
-  { name: 'Le Colosse', type: ShipType.LARGE, capacity: 8000, status: ShipStatus.IN_TRANSIT, route: routes[4] },
-  { name: 'Le Léviathan', type: ShipType.ULTRA_LARGE, capacity: 20000, status: ShipStatus.DOCKED, route: routes[0] },
-  { name: 'Le Béhémoth', type: ShipType.ULTRA_LARGE, capacity: 20000, status: ShipStatus.DOCKED, route: routes[1] },
-]
+// --- IMAGES DE NAVIRES ---
+  const shipsData = [
+    { name: 'Le Petit Prince', type: ShipType.SMALL, capacity: 500, status: ShipStatus.DOCKED, route: routes[0], imageUrl: "/Le_Petit_Prince.jpg" },
+    { name: 'La Perle', type: ShipType.SMALL, capacity: 500, status: ShipStatus.DOCKED, route: routes[1], imageUrl: "/La_Perle.jpg" },
+    { name: 'L\'Étoile', type: ShipType.SMALL, capacity: 500, status: ShipStatus.IN_TRANSIT, route: routes[2], imageUrl: "/L_Etoile.jpg" },
+    { name: 'Le Corsaire', type: ShipType.SMALL, capacity: 500, status: ShipStatus.DOCKED, route: routes[3], imageUrl: "/Le_Corsaire.jpg" },
+    { name: 'Le Conquérant', type: ShipType.MEDIUM, capacity: 2000, status: ShipStatus.DOCKED, route: routes[4], imageUrl: "/Le_Conquerant.jpg" },
+    { name: 'La Sirène', type: ShipType.MEDIUM, capacity: 2000, status: ShipStatus.IN_TRANSIT, route: routes[0], imageUrl: "/La_Sirene.jpg" },
+    { name: 'Le Poséidon', type: ShipType.MEDIUM, capacity: 2000, status: ShipStatus.DOCKED, route: routes[1], imageUrl: "/Le_Poseidon.jpg" },
+    { name: 'L\'Océan', type: ShipType.MEDIUM, capacity: 2000, status: ShipStatus.MAINTENANCE, route: routes[2], imageUrl: "/L_Ocean.jpg" },
+    { name: 'Le Titan', type: ShipType.LARGE, capacity: 8000, status: ShipStatus.DOCKED, route: routes[3], imageUrl: "/Le_Titan.jpg" },
+    { name: 'Le Colosse', type: ShipType.LARGE, capacity: 8000, status: ShipStatus.IN_TRANSIT, route: routes[4], imageUrl: "/Le_Colosse.jpg" },
+    { name: 'Le Léviathan', type: ShipType.ULTRA_LARGE, capacity: 20000, status: ShipStatus.DOCKED, route: routes[0], imageUrl: "/Le_Leviathan.jpg" },
+    { name: 'Le Béhémoth', type: ShipType.ULTRA_LARGE, capacity: 20000, status: ShipStatus.DOCKED, route: routes[1], imageUrl: "/Le_Behemoth.jpg" },
+  ]
 
-// --- 4. DÉFINITION DES ZONES ---
 const ZONES = [
   { name: 'Terminal Nord', startRow: 1, endRow: 500 },
   { name: 'Terminal Sud', startRow: 501, endRow: 1000 },
@@ -48,7 +44,6 @@ const ZONES = [
   { name: 'Zone de Transit', startRow: 1701, endRow: 2000 },
 ]
 
-// --- 5. LOGIQUE DE COULEUR SELON LE TYPE ---
 const getColorForType = (type: ContainerType): ContainerColor => {
   switch (type) {
     case ContainerType.DRY:
@@ -60,7 +55,6 @@ const getColorForType = (type: ContainerType): ContainerColor => {
   }
 }
 
-// --- 6. LOGIQUE DE TYPE SELON LE NAVIRE ---
 const getTypeForShip = (shipType: ShipType): ContainerType => {
   const rand = Math.random()
   if (shipType === ShipType.SMALL) {
@@ -80,57 +74,32 @@ function generateContainerCode() {
 }
 
 async function main() {
-  console.log('🚀 Début du remplissage de la base de données (Version Ultra-Réaliste)...')
+  console.log('🚀 Début du remplissage de la base de données...')
 
-  // --- NETTOYAGE ---
-  console.log('🧹 Nettoyage de la base de données...')
   await prisma.container.deleteMany()
   await prisma.ship.deleteMany()
   await prisma.user.deleteMany()
+  await prisma.broadcast.deleteMany()
 
-    // --- CRÉATION DE L'ADMIN ---
-  console.log('👤 Création de l\'utilisateur Admin sécurisé...')
-  
-  const adminEmail = process.env.ADMIN_EMAIL
-  const adminPassword = process.env.ADMIN_PASSWORD
-
-  if (!adminEmail || !adminPassword) {
-    throw new Error("Les variables ADMIN_EMAIL et ADMIN_PASSWORD doivent être définies dans le .env")
-  }
-
+  // Admin & Opérateur
+  console.log('👤 Création des utilisateurs...')
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@btwcargo.com'
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123'
   const hashedAdminPassword = await bcrypt.hash(adminPassword, 10)
   
   await prisma.user.create({
-    data: {
-      email: adminEmail,
-      password: hashedAdminPassword,
-      name: 'Capitaine Admin',
-      role: 'ADMIN'
-    }
+    data: { email: adminEmail, password: hashedAdminPassword, name: 'Capitaine Admin', role: 'ADMIN' }
   })
 
-  // --- CRÉATION DE L'OPÉRATEUR ---
-  console.log('👤 Création de l\'utilisateur Opérateur...')
-  
-  const operatorEmail = process.env.OPERATOR_EMAIL
-  const operatorPassword = process.env.OPERATOR_PASSWORD
-
-  if (!operatorEmail || !operatorPassword) {
-    throw new Error("Les variables OPERATOR_EMAIL et OPERATOR_PASSWORD doivent être définies dans le .env")
-  }
-
+  const operatorEmail = process.env.OPERATOR_EMAIL || 'operateur@btwcargo.com'
+  const operatorPassword = process.env.OPERATOR_PASSWORD || 'operateur123'
   const hashedOperatorPassword = await bcrypt.hash(operatorPassword, 10)
   
   await prisma.user.create({
-    data: {
-      email: operatorEmail,
-      password: hashedOperatorPassword,
-      name: 'Agent de Quai',
-      role: 'USER'
-    }
+    data: { email: operatorEmail, password: hashedOperatorPassword, name: 'Agent de Quai', role: 'USER' }
   })
 
-  // --- CRÉATION DES NAVIRES ---
+  // Navires
   console.log('⛴️ Création des 12 navires...')
   const shipsWithFillTracker: any[] = []
 
@@ -141,18 +110,15 @@ async function main() {
         type: ship.type,
         capacity: ship.capacity,
         status: ship.status,
-        destination: ship.route.main
+        destination: ship.route.main,
+        imageUrl: ship.imageUrl // <-- L'IMAGE EST ICI
       }
     })
     
-    shipsWithFillTracker.push({
-      ...createdShip,
-      currentFill: 0,
-      route: ship.route
-    })
+    shipsWithFillTracker.push({ ...createdShip, currentFill: 0, route: ship.route })
   }
 
-  // --- CRÉATION DES CONTENEURS ---
+  // Conteneurs
   console.log('📦 Génération de 100 000 conteneurs...')
   const totalContainers = 100000
   const batchSize = 5000 
@@ -162,8 +128,6 @@ async function main() {
     
     for (let j = 0; j < batchSize; j++) {
       const globalIndex = i + j
-      
-      // Adressage physique
       const globalRow = Math.floor(globalIndex / 60) + 1 
       const slot = (globalIndex % 60) + 1
       
@@ -171,7 +135,6 @@ async function main() {
       const localRow = zoneObj ? globalRow - zoneObj.startRow + 1 : 1
       const zoneName = zoneObj ? zoneObj.name : 'Zone Inconnue'
 
-      // Choix du navire et de la destination
       let assignedShip = null
       let containerDestination = ports[Math.floor(Math.random() * ports.length)]
       
@@ -185,7 +148,6 @@ async function main() {
         assignedShip.currentFill += 1
       }
 
-      // Détermination du type et de la couleur
       const containerType = assignedShip 
         ? getTypeForShip(assignedShip.type)
         : (Math.random() < 0.5 ? ContainerType.DRY : ContainerType.HIGH_CUBE)
@@ -208,7 +170,6 @@ async function main() {
       data: containersBatch,
       skipDuplicates: true,
     })
-    
     console.log(`✅ ${i + batchSize} / ${totalContainers} conteneurs insérés...`)
   }
 

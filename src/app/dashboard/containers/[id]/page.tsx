@@ -7,6 +7,16 @@ import { ArrowLeft, MapPin, Ship, Box, Calendar, Palette, Tag, Hash } from 'luci
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
 
+// Images locales pour les conteneurs selon leur couleur
+const CONTAINER_IMAGES: Record<string, string> = {
+  BLEU_MARINE: "/blue-container.jpg",
+  GRIS_METALLIQUE: "/metal-gray-container.jpg",
+  BLANC: "/white-container.jpg",
+  VERT: "/green-container.jpg",
+  ORANGE: "/orange-container.jpg",
+  JAUNE: "/yellow-container.jpg",
+}
+
 const colorMap: Record<string, { bg: string, text: string, label: string }> = {
   BLEU_MARINE: { bg: 'bg-blue-900', text: 'text-blue-100', label: 'Bleu Marine' },
   GRIS_METALLIQUE: { bg: 'bg-slate-500', text: 'text-slate-100', label: 'Gris Métallique' },
@@ -23,7 +33,6 @@ export default async function ContainerDetailPage({
 }) {
   const { id } = await params
 
-  // On récupère le conteneur ET les infos de son navire
   const container = await prisma.container.findUnique({
     where: { id },
     include: {
@@ -38,8 +47,8 @@ export default async function ContainerDetailPage({
   }
 
   const colorInfo = colorMap[container.color] || { bg: 'bg-slate-500', text: 'text-white', label: container.color }
+  const imageUrl = CONTAINER_IMAGES[container.color] || CONTAINER_IMAGES.GRIS_METALLIQUE
 
-  // Couleur du statut
   const getStatusStyle = (status: string) => {
     switch (status) {
       case 'VALIDATED': return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
@@ -51,7 +60,6 @@ export default async function ContainerDetailPage({
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
-      {/* Bouton retour */}
       <Link 
         href="/dashboard/containers" 
         className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors mb-6"
@@ -60,7 +68,6 @@ export default async function ContainerDetailPage({
         Retour à l'inventaire
       </Link>
 
-      {/* En-tête */}
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-2">
           <h1 className="text-4xl font-bold text-white font-mono">{container.code}</h1>
@@ -73,8 +80,19 @@ export default async function ContainerDetailPage({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        {/* Carte : Informations Générales */}
         <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6">
+          {/* L'image du conteneur */}
+          <div className="w-full h-48 rounded-xl overflow-hidden mb-6 bg-slate-900 relative">
+            <img 
+              src={imageUrl} 
+              alt={`Conteneur ${container.color}`}
+              className="w-full h-full object-cover opacity-90 hover:scale-105 transition-transform duration-500"
+            />
+            <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-xs font-mono text-white">
+              {container.code}
+            </div>
+          </div>
+
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <Box className="text-blue-500" size={20} />
             Informations Générales
@@ -102,7 +120,6 @@ export default async function ContainerDetailPage({
           </div>
         </div>
 
-        {/* Carte : Emplacement & Navire */}
         <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6">
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <Ship className="text-emerald-500" size={20} />
