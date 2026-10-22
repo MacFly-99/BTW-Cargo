@@ -4,17 +4,21 @@ import { useActionState } from 'react'
 import { login } from '@/app/actions/auth'
 import Link from 'next/link'
 import { Loader2, AlertCircle } from 'lucide-react'
+import { Logo } from '@/components/Logo'
 
 export default function LoginPage() {
-  // useActionState prend l'action, un état initial, et renvoie [état, actionForm]
   const [state, formAction, isPending] = useActionState(login, null)
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-900 p-4">
       <div className="w-full max-w-md space-y-8 rounded-2xl bg-slate-800 p-8 shadow-xl border border-slate-700">
         
-        <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-white">🚢 BTW-Cargo</h2>
+        <div className="text-center flex flex-col items-center">
+          {/* LOGO */}
+          <div className="mb-4">
+            <Logo className="w-16 h-16" />
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight text-white">BTW-Cargo</h2>
           <p className="mt-2 text-sm text-slate-400">Connectez-vous à votre espace</p>
         </div>
 

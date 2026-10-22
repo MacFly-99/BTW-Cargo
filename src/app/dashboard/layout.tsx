@@ -8,6 +8,7 @@ import { Ship, Container, LayoutDashboard, LogOut, Users, ShieldAlert, UserCircl
 import { logout } from '@/app/actions/auth'
 import { SessionGuard } from '@/components/SessionGuard'
 import { GlobalCapacityAlert } from '@/components/GlobalCapacityAlert'
+import { Logo } from '@/components/Logo'
 
 const getJwtSecret = () => new TextEncoder().encode(process.env.JWT_SECRET)
 
@@ -47,9 +48,12 @@ export default async function DashboardLayout({
       
       {/* Sidebar */}
       <aside className="w-64 bg-slate-950 border-r border-slate-800 flex flex-col">
-        <div className="p-6 border-b border-slate-800">
-          <h1 className="text-2xl font-bold text-blue-500">🚢 BTW-Cargo</h1>
-          <p className="text-xs text-slate-500 mt-1">Logistique Maritime</p>
+        <div className="p-6 border-b border-slate-800 flex items-center gap-3">
+          <Logo className="w-10 h-10" />
+          <div>
+            <h1 className="text-2xl font-bold text-blue-500">BTW-Cargo</h1>
+            <p className="text-xs text-slate-500 mt-1">Logistique Maritime</p>
+          </div>
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
