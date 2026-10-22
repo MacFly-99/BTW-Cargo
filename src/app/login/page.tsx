@@ -43,7 +43,7 @@ export default function LoginPage() {
                 required
                 disabled={isPending}
                 className="mt-1 block w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-white placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
-                placeholder="admin@btwcargo.com"
+                placeholder="votre@email.com"
               />
             </div>
             <div>
