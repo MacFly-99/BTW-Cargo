@@ -1,11 +1,10 @@
 'use client'
 
 import { useRouter, usePathname } from 'next/navigation'
-import { Ship, Anchor, Navigation, Search, Box } from 'lucide-react'
+import { Ship, Anchor, Navigation, Search } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 
-// On définit les types pour TypeScript
 type ShipWithCount = {
   id: string
   name: string
@@ -13,6 +12,7 @@ type ShipWithCount = {
   status: string
   capacity: number
   destination: string | null
+  imageUrl: string | null
   _count: { containers: number }
 }
 
@@ -27,19 +27,13 @@ export function ShipList({
 }) {
   const router = useRouter()
   const pathname = usePathname()
-  
-  // État local pour le filtre d'action (filtré côté client pour la rapidité)
   const [actionFilter, setActionFilter] = useState<string>('')
 
   const updateFilter = (key: string, value: string) => {
     const params = new URLSearchParams()
     if (currentType && key !== 'type') params.set('type', currentType)
     if (currentStatus && key !== 'status') params.set('status', currentStatus)
-    
-    if (value) {
-      params.set(key, value)
-    }
-    
+    if (value) params.set(key, value)
     router.push(`${pathname}?${params.toString()}`)
   }
 
@@ -62,7 +56,6 @@ export function ShipList({
     }
   }
 
-  // Détermine l'état logistique du navire
   const getLogisticsState = (ship: ShipWithCount) => {
     const fillRate = (ship._count.containers / ship.capacity) * 100
     
@@ -81,7 +74,6 @@ export function ShipList({
     return { label: 'Inconnu', color: 'text-slate-400', code: 'unknown' }
   }
 
-  // Filtrage côté client basé sur l'action
   const filteredShips = ships.filter(ship => {
     if (!actionFilter) return true
     return getLogisticsState(ship).code === actionFilter
@@ -93,11 +85,7 @@ export function ShipList({
       <div className="flex flex-wrap gap-4 bg-slate-800 p-4 rounded-xl border border-slate-700 items-center">
         <div className="flex items-center gap-2">
           <span className="text-sm text-slate-400">Type :</span>
-          <select 
-            value={currentType || ''} 
-            onChange={(e) => updateFilter('type', e.target.value)}
-            className="bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-          >
+          <select value={currentType || ''} onChange={(e) => updateFilter('type', e.target.value)} className="bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2">
             <option value="">Tous les types</option>
             <option value="SMALL">Petit</option>
             <option value="MEDIUM">Moyen</option>
@@ -108,11 +96,7 @@ export function ShipList({
 
         <div className="flex items-center gap-2">
           <span className="text-sm text-slate-400">Statut :</span>
-          <select 
-            value={currentStatus || ''} 
-            onChange={(e) => updateFilter('status', e.target.value)}
-            className="bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-          >
+          <select value={currentStatus || ''} onChange={(e) => updateFilter('status', e.target.value)} className="bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2">
             <option value="">Tous les statuts</option>
             <option value="DOCKED">À Quai</option>
             <option value="IN_TRANSIT">En Mer</option>
@@ -122,11 +106,7 @@ export function ShipList({
 
         <div className="flex items-center gap-2">
           <span className="text-sm text-slate-400">Opération :</span>
-          <select 
-            value={actionFilter} 
-            onChange={(e) => setActionFilter(e.target.value)}
-            className="bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-          >
+          <select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)} className="bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2">
             <option value="">Toutes les opérations</option>
             <option value="load">À charger (Quai)</option>
             <option value="unload">À décharger (Mer)</option>
@@ -135,13 +115,7 @@ export function ShipList({
         </div>
         
         {(currentType || currentStatus || actionFilter) && (
-          <button 
-            onClick={() => {
-              setActionFilter('')
-              router.push(pathname)
-            }}
-            className="text-sm text-red-400 hover:text-red-300 transition-colors ml-auto"
-          >
+          <button onClick={() => { setActionFilter(''); router.push(pathname) }} className="text-sm text-red-400 hover:text-red-300 transition-colors ml-auto">
             Réinitialiser les filtres
           </button>
         )}
@@ -166,6 +140,16 @@ export function ShipList({
                 href={`/dashboard/ships/${ship.id}`}
                 className="group block bg-slate-800 rounded-xl border border-slate-700 p-6 hover:border-blue-500/50 hover:bg-slate-750 transition-all flex flex-col"
               >
+                {/* L'image du navire */}
+                <div className="h-32 w-full rounded-lg overflow-hidden mb-4 relative bg-slate-900">
+                  <img 
+                    src={ship.imageUrl || "/Le_Titan.jpg"} 
+                    alt={ship.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-80"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-800 to-transparent"></div>
+                </div>
+
                 <div className="flex justify-between items-start mb-4">
                   <div className="p-3 bg-slate-900 rounded-lg text-slate-300 group-hover:text-blue-400 transition-colors">
                     {getTypeIcon(ship.type)}
@@ -184,7 +168,6 @@ export function ShipList({
                     <span className="text-slate-300 font-medium">{ship.destination || 'N/A'}</span>
                   </div>
                   
-                  {/* Barre de progression du chargement */}
                   <div>
                     <div className="flex justify-between text-xs mb-1">
                       <span className="text-slate-500">Chargement</span>
@@ -199,7 +182,6 @@ export function ShipList({
                   </div>
                 </div>
 
-                {/* Indicateur d'action logistique */}
                 <div className="pt-4 border-t border-slate-700/50 mt-auto">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-slate-500">Opération requise</span>

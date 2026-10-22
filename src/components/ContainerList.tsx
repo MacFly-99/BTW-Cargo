@@ -3,6 +3,7 @@
 import { useRouter, usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Search, Ship, MapPin, ChevronLeft, ChevronRight, Package, Trash2, Pencil, AlertTriangle, Loader2 } from 'lucide-react'
+import Link from 'next/link' // <-- IMPORTANT
 import { deleteContainer, updateContainerDestination } from '@/app/actions/containers'
 import { toast } from 'sonner'
 
@@ -137,8 +138,13 @@ export function ContainerList({
           </thead>
           <tbody className="divide-y divide-slate-700/50">
             {containers.map((container: any) => (
-              <tr key={container.id} className="hover:bg-slate-750 transition-colors">
-                <td className="px-6 py-4 font-mono font-medium text-white">{container.code}</td>
+              <tr key={container.id} className="hover:bg-slate-750 transition-colors group">
+                {/* LE LIEN EST UNIQUEMENT ICI */}
+                <td className="px-6 py-4 font-mono font-medium">
+                  <Link href={`/dashboard/containers/${container.id}`} className="text-white hover:text-blue-400 transition-colors">
+                    {container.code}
+                  </Link>
+                </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
                     <span className={`w-4 h-4 rounded-full border border-slate-600 shadow-sm ${colorMap[container.color] || 'bg-slate-500'}`}></span>
