@@ -122,8 +122,8 @@ export function ContainerList({
       </div>
 
       {/* --- TABLEAU --- */}
-      <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
-        <table className="w-full text-left text-sm text-slate-300">
+      <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-x-auto">
+        <table className="w-full min-w-[800px] text-left text-sm text-slate-300">
           <thead className="bg-slate-900/50 text-slate-400 text-xs uppercase font-medium">
             <tr>
               <th className="px-6 py-4">Code</th>

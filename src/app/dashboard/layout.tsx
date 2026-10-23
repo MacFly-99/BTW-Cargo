@@ -8,11 +8,10 @@ import { Ship, Container, LayoutDashboard, LogOut, Users, ShieldAlert, UserCircl
 import { logout } from '@/app/actions/auth'
 import { SessionGuard } from '@/components/SessionGuard'
 import { GlobalCapacityAlert } from '@/components/GlobalCapacityAlert'
-import { Logo } from '@/components/Logo'
+import { MobileHeader } from '@/components/MobileHeader'
 
 const getJwtSecret = () => new TextEncoder().encode(process.env.JWT_SECRET)
 
-// On initialise Prisma pour compter les messages
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
 
@@ -36,24 +35,23 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
-  // On compte les messages non lus (uniquement pour les opérateurs)
   let unreadCount = 0
   if (session.role !== 'ADMIN') {
     unreadCount = await prisma.broadcast.count({ where: { isRead: false } })
   }
 
   return (
-    <div className="flex h-screen bg-slate-900 text-white">
+    <div className="flex flex-col md:flex-row h-screen bg-slate-900 text-white overflow-hidden">
       <SessionGuard />
       
-      {/* Sidebar */}
-      <aside className="w-64 bg-slate-950 border-r border-slate-800 flex flex-col">
-        <div className="p-6 border-b border-slate-800 flex items-center gap-3">
-          <Logo className="w-10 h-10" />
-          <div>
-            <h1 className="text-2xl font-bold text-blue-500">BTW-Cargo</h1>
-            <p className="text-xs text-slate-500 mt-1">Logistique Maritime</p>
-          </div>
+      {/* Menu Mobile (s'affiche uniquement sur petit écran) */}
+      <MobileHeader session={session} />
+
+      {/* Sidebar (cachée sur mobile avec "hidden md:flex") */}
+      <aside className="hidden md:flex w-64 bg-slate-950 border-r border-slate-800 flex-col h-full">
+        <div className="p-6 border-b border-slate-800">
+          <h1 className="text-2xl font-bold text-blue-500">🚢 BTW-Cargo</h1>
+          <p className="text-xs text-slate-500 mt-1">Logistique Maritime</p>
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -62,7 +60,6 @@ export default async function DashboardLayout({
             Tableau de bord
           </Link>
           
-          {/* Lien Messages (Opérateurs uniquement) avec BADGE */}
           {session.role !== 'ADMIN' && (
             <Link href="/dashboard/messages" className="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-slate-300 hover:text-white group">
               <div className="flex items-center gap-3">
@@ -130,11 +127,10 @@ export default async function DashboardLayout({
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto flex flex-col">
-        {/* L'alerte apparaît ici, collée en haut, uniquement pour l'admin */}
+      <main className="flex-1 overflow-y-auto flex flex-col h-full">
         {session.role === 'ADMIN' && <GlobalCapacityAlert />}
         
-        <div className="flex-1">
+        <div className="flex-1 p-4 md:p-8">
           {children}
         </div>
       </main>
