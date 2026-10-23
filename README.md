@@ -56,6 +56,8 @@ Elle a été développée dans le cadre d'un projet de formation avec pour objec
 - Diffuser des **messages** via le Tour de Contrôle
 - Superviser la **simulation** du port
 
+Interface **100% responsive** (adaptée aux mobiles et tablettes).
+
 ---
 
 ## 🛠️ Stack technique
@@ -192,15 +194,15 @@ pnpm dev
 ### 📦 Composants en production
 
 | Composant           | Plateforme | URL        |
-| ------------------- | ---------- | ---------- |
-| 🎨 Application      | Vercel     | (à venir)  |
-| 🗄️ Base de données  | Neon.tech  | (à venir)  |
+| ------------------- | ---------- | ------------------------------ |
+| 🎨 Application      | Vercel     | https://btw-cargo.vercel.app/  |
+| 🗄️ Base de données  | Neon.tech  |                                |
 
 ### ⚙️ Procédure simplifiée
 
 1. **Frontend/Backend** : déployé sur Vercel.
 2. **Base de données** : provisionnée sur Neon.tech (PostgreSQL Serverless).
-3. **CRON** : configuré via Vercel Cron Jobs.
+3. **CRON** : configuré via Cron-Job.org.
 
 ---
 
@@ -311,13 +313,13 @@ btw-cargo/
 
 - Projet d'entraînement — 2026
 - 🐙 GitHub : [MacFly-99](https://github.com/MacFly-99)
-- 🌐 Application : [BTW-Cargo](https://btw-cargo.vercel.app) *(à venir)*
+- 🌐 Application : [BTW-Cargo](https://btw-cargo.vercel.app)
 
 ---
 
 ## 📄 Licence
 
-Projet réalisé pour le plaisir. Usage pédagogique uniquement.
+Projet propriétaire. Usage pédagogique uniquement.
 
 Je tiens à remercier "Pixabay", "Unsplash" et "Pexels" pour les photos/images fournies ainsi que :
 
